@@ -38,7 +38,7 @@ https://youtu.be/OhhxrzGfgDo
 
 ## Based on GeekSeek
 
-This project is adapted from **GeekSeek**, built by team GeekSeek from MeRo at SNU (김민재, 박상원, 강채은) for the 1st Robot Hackathon hosted by Roboticus (Aug 5–8, 2026, KAIST).
+This project is adapted from **GeekSeek**, built by team GeekSeek from MERO at SNU (김민재, 박상원, 강채은) for the 1st Robot Hackathon hosted by Roboticus (Aug 5–8, 2026, KAIST).
 
 | | Original GeekSeek | This project |
 |---|---|---|
