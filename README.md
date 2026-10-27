@@ -4,7 +4,7 @@ A kiosk robot that photographs guests, run live at the opening ceremony of an SN
 
 ## Demo
 
-[![Demo video](https://img.youtube.com/vi/OhhxrzGfgDo/hqdefault.jpg)](https://youtu.be/OhhxrzGfgDo)
+https://youtu.be/OhhxrzGfgDo
 
 ## Sample photos
 
