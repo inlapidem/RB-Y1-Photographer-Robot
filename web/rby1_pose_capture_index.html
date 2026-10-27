@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RBY1 Pose Recorder</title>
+<style>
+  :root { color-scheme: dark; font-family: Inter, Pretendard, -apple-system, system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100svh; display: grid; place-items: center;
+    background:
+      radial-gradient(circle at 12% 8%, #303b9550, transparent 35%),
+      radial-gradient(circle at 88% 90%, #7f3da940, transparent 38%), #0b0e16;
+    color: #f5f7ff;
+  }
+  main { width: min(940px, 100%); padding: 28px; }
+  header { margin-bottom: 28px; }
+  .eyebrow { color: #95a3ff; font-size: .78rem; font-weight: 900; letter-spacing: .14em; }
+  h1 { margin: 8px 0; font-size: clamp(2rem, 6vw, 4rem); line-height: 1.02; letter-spacing: -.04em; }
+  .lead { margin: 0; color: #aeb8d2; font-size: clamp(.95rem, 2vw, 1.14rem); }
+  .status {
+    display: inline-flex; align-items: center; gap: 9px; margin-top: 18px; padding: 9px 13px;
+    border: 1px solid #30384d; border-radius: 999px; background: #141925cc; color: #adb6cd; font-weight: 750;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: #6d7895; box-shadow: 0 0 0 5px #6d78951c; }
+  .status.ok .dot { background: #65e9a3; box-shadow: 0 0 0 5px #65e9a31c; }
+  .status.error .dot { background: #ff7683; box-shadow: 0 0 0 5px #ff76831c; }
+  .choices { min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .choice {
+    position: relative; min-width: 0; min-height: 285px; padding: 25px; display: flex; flex-direction: column;
+    border: 1px solid #2c3449; border-radius: 28px; overflow: hidden; color: inherit; text-decoration: none;
+    background: linear-gradient(150deg, #1b2130, #121722); box-shadow: 0 28px 80px #0006;
+    transition: transform .18s ease, border-color .18s ease;
+  }
+  .choice:hover, .choice:focus-visible { transform: translateY(-4px); border-color: #7181ff; outline: none; }
+  .choice.recommended::after {
+    content: "이 기기에 추천"; position: absolute; top: 18px; right: 18px; padding: 7px 10px;
+    border-radius: 999px; background: #6678ff25; color: #aeb7ff; font-size: .73rem; font-weight: 850;
+  }
+  .icon {
+    width: 64px; height: 64px; display: grid; place-items: center; border-radius: 20px;
+    background: linear-gradient(135deg, #6678ff, #9e52dc); box-shadow: 0 12px 30px #6d57e94d;
+    font-size: 1.7rem; font-weight: 900;
+  }
+  h2 { margin: auto 0 7px; font-size: 1.55rem; }
+  .choice p { min-height: 48px; margin: 0 0 21px; color: #9fa9c1; line-height: 1.55; overflow-wrap: anywhere; }
+  .enter { display: flex; align-items: center; justify-content: space-between; font-weight: 850; }
+  .arrow { font-size: 1.35rem; }
+  footer { margin-top: 20px; color: #7f899f; font-size: .82rem; line-height: 1.6; }
+  footer a { color: #aeb7ff; }
+  @media (max-width: 680px) {
+    main { width: 100vw; padding: 18px; overflow: hidden; }
+    header { margin-bottom: 20px; }
+    .choices { grid-template-columns: minmax(0, 1fr); }
+    .choice { min-height: 215px; border-radius: 23px; }
+    .icon { width: 54px; height: 54px; border-radius: 17px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="eyebrow">GEEKSEEK · RBY1 TEACHING</div>
+    <h1>어느 기기에서<br />접속하셨나요?</h1>
+    <p class="lead">iPhone은 카메라를 보내고, 노트북은 화면을 보며 Pose를 저장합니다.</p>
+    <div id="status" class="status"><i class="dot"></i><span>RBY1 상태 확인 중…</span></div>
+  </header>
+
+  <section class="choices" aria-label="기기 선택">
+    <a id="phoneChoice" class="choice" href="/phone">
+      <div class="icon" aria-hidden="true">▯</div>
+      <h2>iPhone 카메라 연결</h2>
+      <p>후면 카메라를 켜고 Phorce Studio와 같은 방식으로 영상을 Jetson에 전송합니다.</p>
+      <div class="enter"><span>카메라 송신 시작</span><span class="arrow">→</span></div>
+    </a>
+
+    <a id="operatorChoice" class="choice" href="/operator">
+      <div class="icon" aria-hidden="true">⌨</div>
+      <h2>노트북 녹화 화면</h2>
+      <p>iPhone 영상을 확인하고 Space로 사진과 RBY1 7축 엔코더를 함께 저장합니다.</p>
+      <div class="enter"><span>Operator 열기</span><span class="arrow">→</span></div>
+    </a>
+  </section>
+
+  <footer>
+    iPhone에서 카메라 권한이 차단되면 <a href="/local-ca.crt">GeekSeek 로컬 인증서</a>를 설치한 뒤 다시 접속하세요.
+  </footer>
+</main>
+<script>
+  const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  document.getElementById(isAppleMobile ? "phoneChoice" : "operatorChoice").classList.add("recommended");
+
+  async function refreshStatus() {
+    const status = document.getElementById("status");
+    try {
+      const response = await fetch("/api/status", {cache: "no-store"});
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      status.className = "status ok";
+      status.querySelector("span").textContent = data.phone_connected
+        ? "RBY1 정상 · iPhone 연결됨"
+        : "RBY1 정상 · iPhone 연결 대기";
+    } catch (_) {
+      status.className = "status error";
+      status.querySelector("span").textContent = "RBY1 상태를 확인할 수 없습니다";
+    }
+  }
+  refreshStatus();
+  setInterval(refreshStatus, 1200);
+</script>
+</body>
+</html>

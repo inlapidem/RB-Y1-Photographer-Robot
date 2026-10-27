@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>phone capture test</title>
+<style>
+  body { margin: 0; background: #111; color: #eee; font-family: -apple-system, sans-serif; }
+  /* 저장되는 것과 같은 3:4만 보여준다. 스트림이 16:9면 캡처는 위아래를 잘라내는데
+     미리보기가 잘리기 전 전체를 보여주면, 화면에 보이던 구도와 사진이 달라진다. */
+  .frame { width: 100%; aspect-ratio: 3 / 4; overflow: hidden; background: #000; }
+  video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #status { padding: 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="frame"><video id="v" autoplay playsinline muted></video></div>
+<div id="status">connecting...</div>
+<canvas id="c" style="display:none"></canvas>
+<script>
+  const statusEl = document.getElementById("status");
+  const video = document.getElementById("v");
+  const canvas = document.getElementById("c");
+
+  // 결과물은 항상 세로 3:4다. 구도(웨이포인트 각도)를 3:4 화면 기준으로 잡았기
+  // 때문에 비율이 바뀌면 프레이밍이 통째로 달라진다.
+  //
+  // 해상도 제약은 힌트일 뿐이라 카메라가 16:9 같은 native 모드로 응답할 수
+  // 있다 — 실제로 그래서 비율이 틀어졌다. 그러니 스트림 비율을 믿지 말고
+  // 캔버스에서 3:4로 잘라낸다.
+  const RATIO = 3 / 4;   // 가로/세로
+  const MAX_HEIGHT = 1440;
+
+  async function start() {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      // 비율은 아래에서 강제하므로 여기서는 "가능하면 크게"만 요청한다.
+      // Waypoint 측정 페이지와 같은 조건으로 후면 카메라만 요청한다.
+      // 해상도와 비율은 Safari가 고르고, 결과 3:4는 아래 Canvas에서 맞춘다.
+      video: { facingMode: "environment" },
+      audio: false,
+    });
+    video.srcObject = stream;
+
+    const track = stream.getVideoTracks()[0];
+    const initialCapabilities = track.getCapabilities ? track.getCapabilities() : {};
+    // Pin the ordinary iPhone 1x view. Safari can preserve a previous zoom
+    // when the page/server reconnects, so relying on its implicit default can
+    // make otherwise identical runtime YAMLs appear to use different framing.
+    if (
+      initialCapabilities.zoom
+      && initialCapabilities.zoom.min <= 1
+      && initialCapabilities.zoom.max >= 1
+    ) {
+      try {
+        await track.applyConstraints({advanced: [{zoom: 1}]});
+      } catch (_) {
+        // Older Safari versions expose no constrainable zoom; keep the native view.
+      }
+    }
+    const s = track.getSettings ? track.getSettings() : {};
+    const info = [
+      `${s.width || "?"}x${s.height || "?"}`,
+      s.zoom !== undefined ? `zoom ${s.zoom}` : null,
+      track.label || null,
+    ].filter(Boolean).join(" · ");
+
+    const ws = new WebSocket(`wss://${location.host}/phone-ws`);
+    const sendMetadata = async () => {
+      if (ws.readyState !== WebSocket.OPEN) return;
+      const settings = track.getSettings ? track.getSettings() : {};
+      const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+      let videoDevices = [];
+      try {
+        videoDevices = (await navigator.mediaDevices.enumerateDevices())
+          .filter((device) => device.kind === "videoinput")
+          .map((device) => ({label: device.label, device_id: device.deviceId}));
+      } catch (_) {
+        // Camera metadata below is still useful when device enumeration is unavailable.
+      }
+      ws.send(JSON.stringify({
+        type: "camera_metadata",
+        track_label: track.label || null,
+        track_width: settings.width ?? null,
+        track_height: settings.height ?? null,
+        track_aspect_ratio: settings.aspectRatio ?? null,
+        track_zoom: settings.zoom ?? null,
+        track_device_id: settings.deviceId ?? null,
+        track_group_id: settings.groupId ?? null,
+        zoom_capability: capabilities.zoom ?? null,
+        facing_mode: settings.facingMode ?? null,
+        video_devices: videoDevices,
+        video_width: video.videoWidth || null,
+        video_height: video.videoHeight || null,
+        screen_width: screen.width,
+        screen_height: screen.height,
+        screen_orientation: screen.orientation?.type ?? null,
+        screen_angle: screen.orientation?.angle ?? window.orientation ?? null,
+      }));
+    };
+    ws.onopen = () => {
+      statusEl.textContent = `connected · ${info}`;
+      sendMetadata();
+    };
+    video.addEventListener("loadedmetadata", sendMetadata);
+    video.addEventListener("resize", sendMetadata);
+    ws.onclose = () => (statusEl.textContent = "disconnected");
+    ws.onerror = () => (statusEl.textContent = "websocket error");
+    ws.onmessage = (event) => {
+      if (event.data !== "capture") return;
+      const sw = video.videoWidth;
+      const sh = video.videoHeight;
+
+      // 프레임 안에서 잡을 수 있는 가장 큰 3:4 영역을 가운데로 잘라낸다.
+      let cropW = Math.min(sw, sh * RATIO);
+      let cropH = cropW / RATIO;
+      if (cropH > sh) {
+        cropH = sh;
+        cropW = cropH * RATIO;
+      }
+      const outH = Math.min(MAX_HEIGHT, Math.round(cropH));
+      canvas.height = outH;
+      canvas.width = Math.round(outH * RATIO);
+      canvas.getContext("2d").drawImage(
+        video,
+        (sw - cropW) / 2, (sh - cropH) / 2, cropW, cropH,
+        0, 0, canvas.width, canvas.height
+      );
+
+      canvas.toBlob(
+        (blob) => {
+          ws.send(blob);
+          statusEl.textContent =
+            `stream ${sw}x${sh} → saved ${canvas.width}x${canvas.height} · ` +
+            `${Math.round(blob.size / 1024)}KB · ` +
+            new Date().toLocaleTimeString();
+        },
+        "image/jpeg",
+        0.9
+      );
+    };
+  }
+
+  start().catch((err) => (statusEl.textContent = "error: " + err));
+</script>
+</body>
+</html>

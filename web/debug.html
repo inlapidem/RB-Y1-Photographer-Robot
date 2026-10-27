@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko" data-page="debug">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geekseek Debug</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="kiosk debug-page">
+    <header><span class="brand">GEEKSEEK DEBUG</span><span id="connection" class="connection">연결 중</span></header>
+    <section class="debug-layout">
+      <div>
+        <p class="eyebrow">WORKFLOW</p><h1 id="headline">상태 머신</h1><p id="message"></p>
+        <div class="debug-buttons">
+          <button data-template="full_body">전신으로 촬영 시작</button><button data-template="upper_body">상반신으로 촬영 시작</button>
+          <button data-template="product_closeup">제품 클로즈업으로 촬영 시작</button><button id="decline">거절</button>
+          <button id="replay">다시 보기</button><button id="liked" class="primary">마음에 들어요</button><button id="reset">초기화</button>
+        </div>
+        <p class="eyebrow">인식 건너뛰기 — 사람이 많아 스켈레톤이 흔들릴 때</p>
+        <div class="debug-buttons skip-buttons">
+          <button id="gesture-left">왼손 테스트 → 전신샷</button>
+          <button id="gesture-right">오른손 테스트 → 상반신샷</button>
+          <button id="skip-approach">1→2 접근 감지 건너뛰기</button>
+          <button id="skip-position">4→5 정위치 인식 건너뛰기</button>
+          <button id="skip-ready">준비완료(손들기) 건너뛰기</button>
+        </div>
+        <p class="eyebrow">PHOTOS</p><ul id="photos"><li>아직 촬영된 사진이 없습니다.</li></ul>
+        <nav>
+          <a href="/face" target="_blank">iPad 1 화면</a>
+          <a href="/guide" target="_blank">iPad 2 화면</a>
+          <a href="/standby" target="_blank">StandByMe 통합 화면</a>
+          <a href="/phone" target="_blank">Phone 웹앱</a>
+          <a href="/docs" target="_blank">API 문서</a>
+        </nav>
+      </div>
+      <div>
+        <pre id="debug-json">연결 중…</pre>
+        <p class="eyebrow">WEBCAM (person_sensor: mediapipe일 때만)</p>
+        <img id="webcam-debug" src="/debug/webcam" alt="웹캠 인식 디버그" style="width:100%;border-radius:16px;border:1px solid #31384d;"
+             onerror="this.replaceWith(Object.assign(document.createElement('p'),{textContent:'웹캠 디버그 스트림 없음 (person_sensor: fake)',style:'color:#737b91'}))">
+      </div>
+    </section>
+    <footer>촬영 상태 <code id="state">booting</code></footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

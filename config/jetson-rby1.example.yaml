@@ -1,0 +1,36 @@
+# RB-Y1 오른팔 카메라 키오스크 설정.
+#
+# 기존 calibration 경로에는 연속 trajectory 대신 휴대폰을 실제로 쥔 상태에서
+# 티칭한 11개 keypose가 들어간다. 런타임이 최단 방문 순서와 중간 정지 촬영점을
+# 생성한다. Phorce의 axis 값이나 P-vector CSV를 여기로 복사하면 안 된다.
+runtime:
+  robot: rby1
+  rby1_address: "192.168.12.1:50051"
+  rby1_model: a
+  rby1_command_priority: 1
+  rby1_speed_ratio: 0.70
+  rby1_acceleration_ratio: 0.50
+  rby1_min_travel_seconds: 0.25
+  rby1_trajectories:
+    frame.full_body: calibration/rby1/frame.full_body.json
+    frame.upper_body: calibration/rby1/frame.upper_body.json
+
+  capture: webapp
+  person_sensor: mediapipe
+  camera_name: Nuroum V11
+  camera_index: 0
+  camera_fps: 15.0
+  camera_width: 1280
+  camera_height: 960
+  camera_fourcc: MJPG
+  framing_dataset_dir: calibration/webcam_skeleton_1280x960
+  # 11개 직접 티칭 구도 + 19개 구간 보간 구도. 모든 구도에서 정지 후 촬영한다.
+  photo_target_count: 30
+  slide_seconds: 0.288
+
+web:
+  host: 0.0.0.0
+  # Public Funnel :8443 proxies to this local backend port.
+  port: 8444
+  ssl_keyfile: certs/key.pem
+  ssl_certfile: certs/cert.pem

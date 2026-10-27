@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RBY1 Camera Pose Recorder</title>
+<style>
+  :root { color-scheme: dark; font-family: Inter, Pretendard, system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100svh; background: #0b0e16; color: #f5f7ff; }
+  .shell { width: min(1440px, 100%); margin: auto; padding: 22px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: clamp(1.25rem, 2vw, 2rem); }
+  .sub { margin: 5px 0 0; color: #939db8; }
+  .chip { padding: 9px 14px; border-radius: 999px; background: #22293a; color: #aeb8d2; font-weight: 700; }
+  .chip.ok { color: #91f3c0; background: #15382d; }
+  .chip.error { color: #ffabb3; background: #4b2028; }
+  main { display: grid; grid-template-columns: minmax(0, 1.65fr) minmax(320px, .75fr); gap: 18px; }
+  .card { background: #141925; border: 1px solid #252c3d; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 70px #0007; }
+  .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #252c3d; }
+  .preview { position: relative; aspect-ratio: 3/4; background: #05070b; }
+  .phone-live { width: 100%; height: 100%; display: block; object-fit: contain; background: #05070b; }
+  .phone-live:not([src]) { visibility: hidden; }
+  .grid { position: absolute; inset: 0; pointer-events: none; opacity: .38; background: linear-gradient(90deg, transparent 33.2%, #fff 33.3%, transparent 33.45%, transparent 66.5%, #fff 66.6%, transparent 66.75%), linear-gradient(0deg, transparent 33.2%, #fff 33.3%, transparent 33.45%, transparent 66.5%, #fff 66.6%, transparent 66.75%); }
+  .flash { position: absolute; inset: 0; border: 8px solid #8b72ff; opacity: 0; pointer-events: none; transition: opacity .16s; }
+  .flash.on { opacity: 1; }
+  .monitor-preview { width: 100%; height: 100%; display: none; object-fit: contain; background: #05070b; }
+  .source { position: absolute; top: 14px; left: 14px; z-index: 2; padding: 8px 11px; border-radius: 999px; background: #090c14cc; color: #dbe1f5; font-size: .78rem; font-weight: 800; backdrop-filter: blur(8px); }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; padding: 16px; }
+  button { min-height: 48px; padding: 0 20px; border: 0; border-radius: 18px; color: #f8f9ff; background: #2b3348; font: inherit; font-weight: 800; cursor: pointer; }
+  button.primary { flex: 1 1 230px; background: linear-gradient(135deg, #6678ff, #9e52dc); }
+  button:disabled { opacity: .45; cursor: wait; }
+  .status { min-height: 54px; padding: 0 18px 18px; color: #aeb8d2; }
+  .status.error { color: #ff9ba6; }
+  .status.ok { color: #85edb3; }
+  aside { padding: 20px; }
+  .counter { display: flex; align-items: end; justify-content: space-between; margin-bottom: 18px; }
+  .counter strong { font-size: 3rem; line-height: 1; }
+  .counter span { color: #8f99b2; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 9px 4px; border-bottom: 1px solid #293044; text-align: right; }
+  th:first-child, td:first-child { text-align: left; color: #9da7bf; }
+  .meta { margin-top: 18px; padding: 14px; border-radius: 16px; background: #0e121c; color: #aeb8d2; line-height: 1.7; }
+  .meta.warning { color: #ffadb5; background: #351820; }
+  .last { width: 100%; margin-top: 16px; border-radius: 16px; display: none; }
+  kbd { padding: 3px 8px; border: 1px solid #667087; border-bottom-width: 3px; border-radius: 7px; }
+  canvas { display: none; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) {
+    .shell { padding: 12px; }
+    header { display: grid; grid-template-columns: 1fr; align-items: flex-start; gap: 10px; }
+    header .chip { justify-self: start; padding: 7px 11px; font-size: .8rem; }
+    .sub { font-size: .82rem; }
+    .card { border-radius: 18px; }
+    .preview-grid { grid-template-columns: 1fr; }
+    .preview { aspect-ratio: 3/4; max-height: 68svh; }
+    .controls { display: grid; grid-template-columns: 1fr; padding: 10px; }
+    button { padding: 0 10px; border-radius: 15px; font-size: .88rem; }
+    button.primary { min-height: 62px; }
+    kbd { display: none; }
+    aside { padding: 14px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div><h1>RBY1 iPhone Pose Recorder</h1><p class="sub">iPhone은 카메라 송신, 이 노트북은 Space 캡처를 담당합니다.</p></div>
+    <div id="connection" class="chip">연결 확인 중</div>
+  </header>
+  <main>
+    <section class="card">
+      <div class="preview-grid">
+        <div class="preview">
+          <img id="phoneLive" class="phone-live" alt="iPhone 실시간 카메라" />
+          <div id="source" class="source">iPhone 촬영 화면</div>
+          <div class="grid"></div><div id="flash" class="flash"></div>
+        </div>
+        <div class="preview">
+          <img id="skeletonLive" class="phone-live" alt="RGB 카메라 화면" />
+          <div class="source">RGB 카메라 · 함께 저장됨</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button id="capture" class="primary"><kbd>Space</kbd> iPhone + RGB + Pose 저장</button>
+        <button id="home"><kbd>H</kbd> Home + 두 카메라 저장</button>
+        <button id="export"><kbd>E</kbd> keyposes.json 내보내기</button>
+      </div>
+      <div id="message" class="status">iPhone에서 /phone 페이지를 열어주세요.</div>
+    </section>
+    <aside class="card">
+      <div class="counter"><div><span>CAPTURED</span><br><strong id="count">0</strong></div><span id="homeState">HOME 없음</span></div>
+      <table><thead><tr><th>Joint</th><th>deg</th><th>deg/s</th></tr></thead><tbody id="joints"></tbody></table>
+      <div id="meta" class="meta">RBY1 상태를 기다리는 중…</div>
+      <img id="last" class="last" alt="마지막 저장 사진" />
+    </aside>
+  </main>
+</div>
+<script>
+  const $ = (s) => document.querySelector(s);
+  const phoneLive = $("#phoneLive"), skeletonLive = $("#skeletonLive");
+  const message = $("#message"), source = $("#source");
+  const buttons = [...document.querySelectorAll("button")];
+  let busy = false;
+  let phoneReady = false;
+  let previousPhoneReady = null;
+  let liveLoading = false;
+  let skeletonLoading = false;
+  let robotSafe = true;
+  let robotStopped = true;
+  let templateId = "full_body";
+  let lastReferenceImage = "";
+
+  function show(text, kind = "") { message.textContent = text; message.className = `status ${kind}`; }
+  function disabled(value) {
+    busy = value;
+    $("#capture").disabled = value || !phoneReady || !robotSafe || !robotStopped;
+    $("#home").disabled = value || !phoneReady;
+    $("#export").disabled = value;
+  }
+  async function detail(response) { try { return (await response.json()).detail; } catch { return `HTTP ${response.status}`; } }
+
+  function render(data) {
+    const robot = data.robot || {}, session = data.session || {};
+    phoneReady = Boolean(data.phone_connected && data.phone_frame_ready);
+    if (!busy && phoneReady !== previousPhoneReady) {
+      show(
+        phoneReady ? "준비됨 · 팔을 멈춘 뒤 노트북에서 Space를 누르세요" : "iPhone에서 /phone 페이지를 열어주세요.",
+        phoneReady ? "ok" : ""
+      );
+    }
+    previousPhoneReady = phoneReady;
+    $("#connection").textContent = phoneReady ? "RBY1 + iPhone 연결됨" : "RBY1 연결 · iPhone 대기";
+    $("#connection").className = phoneReady ? "chip ok" : "chip";
+    source.textContent = phoneReady ? `iPhone 실시간 · ${data.phone_frame_age_seconds ?? "-"}s` : "iPhone 연결 대기 중";
+    disabled(busy);
+    $("#count").textContent = session.anchor_count ?? 0;
+    $("#homeState").textContent = session.home_saved ? "HOME 저장됨" : "HOME 없음";
+    const names = robot.right_arm_joint_names || [], deg = robot.right_arm_deg || [], speed = robot.right_arm_velocity_deg_s || [];
+    $("#joints").innerHTML = names.map((name, index) => `<tr><td>${name}</td><td>${deg[index].toFixed(2)}</td><td>${speed[index].toFixed(3)}</td></tr>`).join("");
+    const ft = robot.ft_sensor_right || {};
+    const violations = robot.joint_limit_violations || [];
+    const maxSpeed = robot.max_speed_deg_s || 0;
+    robotSafe = violations.length === 0;
+    robotStopped = maxSpeed <= 0.5;
+    $("#meta").className = `meta ${robotSafe && robotStopped ? "" : "warning"}`;
+    $("#meta").innerHTML = `${robotSafe ? "" : `⚠ 관절 범위 이탈: ${violations.map(item => item.joint).join(", ")}<br>`}${robotStopped ? "" : "⚠ 팔이 움직이는 중입니다<br>"}Control: ${robot.control_manager?.state || "-"}<br>최대 속도: ${maxSpeed.toFixed(3)} deg/s<br>Force: ${(ft.force_n || []).map(v => v.toFixed(1)).join(", ")} N<br>Torque: ${(ft.torque_nm || []).map(v => v.toFixed(3)).join(", ")} Nm`;
+    disabled(busy);
+    const reference = session.last_sample?.reference_image || "";
+    if (reference && reference !== lastReferenceImage) {
+      lastReferenceImage = reference;
+      $("#last").src = `/samples/${encodeURIComponent(reference)}?t=${Date.now()}`;
+      $("#last").style.display = "block";
+    }
+  }
+
+  async function refresh() {
+    try { const response = await fetch("/api/status", {cache:"no-store"}); if (!response.ok) throw new Error(await detail(response)); render(await response.json()); }
+    catch (error) { $("#connection").textContent = "연결 오류"; $("#connection").className = "chip error"; if (!busy) show(error.message, "error"); }
+  }
+
+  async function refreshLive() {
+    if (!phoneReady || liveLoading) return;
+    liveLoading = true;
+    try {
+      const response = await fetch(`/api/live-frame?t=${Date.now()}`, {cache:"no-store"});
+      if (!response.ok) return;
+      const url = URL.createObjectURL(await response.blob());
+      const previous = phoneLive.dataset.objectUrl;
+      phoneLive.src = url;
+      phoneLive.dataset.objectUrl = url;
+      if (previous) URL.revokeObjectURL(previous);
+    } finally { liveLoading = false; }
+  }
+
+  async function refreshSkeleton() {
+    if (skeletonLoading) return;
+    skeletonLoading = true;
+    try {
+      const response = await fetch(`/api/rgb-frame?t=${Date.now()}`, {cache:"no-store"});
+      if (!response.ok) return;
+      const url = URL.createObjectURL(await response.blob());
+      const previous = skeletonLive.dataset.objectUrl;
+      skeletonLive.src = url;
+      skeletonLive.dataset.objectUrl = url;
+      if (previous) URL.revokeObjectURL(previous);
+    } finally { skeletonLoading = false; }
+  }
+
+  async function capture(kind) {
+    if (busy) return;
+    disabled(true); show(kind === "home" ? "Home · iPhone · RGB · Pose 저장 중…" : "iPhone · RGB · Pose를 함께 저장하는 중…");
+    try {
+      const response = await fetch(`/api/capture/${kind}?template_id=${encodeURIComponent(templateId)}`, {method:"POST"});
+      if (!response.ok) throw new Error(await detail(response));
+      const data = await response.json();
+      $("#last").src = `${data.image_url}?t=${Date.now()}`; $("#last").style.display = "block";
+      $("#flash").classList.add("on"); setTimeout(() => $("#flash").classList.remove("on"), 170);
+      show(`${data.sample.label} 저장 완료 · iPhone + RGB + Pose + CSV`, "ok");
+      await refresh();
+    } catch (error) { show(error.message, "error"); } finally { disabled(false); }
+  }
+
+  async function exportKeyposes() {
+    if (busy) return; disabled(true);
+    try { const response = await fetch("/api/export", {method:"POST"}); if (!response.ok) throw new Error(await detail(response)); const data = await response.json(); show(`내보내기 완료: ${data.path}`, "ok"); }
+    catch (error) { show(error.message, "error"); } finally { disabled(false); }
+  }
+
+  $("#capture").onclick = () => capture("anchor"); $("#home").onclick = () => capture("home"); $("#export").onclick = exportKeyposes;
+  document.addEventListener("keydown", (event) => { if (event.repeat || busy) return; if (event.code === "Space") { event.preventDefault(); capture("anchor"); } else if (event.code === "KeyH") capture("home"); else if (event.code === "KeyE") exportKeyposes(); });
+
+  disabled(false);
+  refresh();
+  refreshSkeleton();
+  setInterval(refresh, 700);
+  setInterval(refreshLive, 120);
+  setInterval(refreshSkeleton, 200);
+</script>
+</body>
+</html>

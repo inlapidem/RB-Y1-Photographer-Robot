@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ko" data-page="standby">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080b14">
+  <title>Geekseek · RB-Y1 Portrait Display</title>
+  <link rel="stylesheet" href="/static/mock.css">
+  <link rel="stylesheet" href="/static/standby.css">
+</head>
+<body>
+  <main class="kiosk mock-kiosk standby-kiosk">
+    <header class="standby-header">
+      <div class="brand-lockup"><span class="brand-mark">G</span><span><b>GEEKSEEK</b><small>ROBOT PHOTOGRAPHER</small></span></div>
+      <span class="stage-chip"><i></i><b id="stage-label">연결 중</b></span>
+    </header>
+
+    <section class="companion-panel" aria-live="polite">
+      <div id="face" class="robot-face mood-gentle" role="img" aria-label="상냥한 눈 표정">
+        <div class="face-glow"></div>
+        <div class="eye eye-left"><span class="lid"></span><span class="pupil"></span><span class="sparkle sparkle-a"></span><span class="sparkle sparkle-b"></span></div>
+        <div class="eye eye-right"><span class="lid"></span><span class="pupil"></span><span class="sparkle sparkle-a"></span><span class="sparkle sparkle-b"></span></div>
+        <span class="excitement excitement-a"></span><span class="excitement excitement-b"></span><span class="excitement excitement-c"></span>
+      </div>
+      <div class="companion-copy">
+        <p id="face-note" class="face-note">반가워요</p>
+        <p id="stage-title">사람을 기다리는 중</p>
+      </div>
+    </section>
+
+    <section id="guide-stage" class="guide-stage standby-stage" aria-live="polite">
+      <article class="guide-scene scene-billboard" data-scene="1">
+        <div class="billboard-orbit orbit-one"></div><div class="billboard-orbit orbit-two"></div>
+        <div class="camera-glyph" aria-hidden="true"><span></span><i></i></div>
+        <p class="eyebrow">YOUR MOMENT, DIRECTED</p>
+        <h1>로봇이<br><em>사진 찍어드려요</em></h1>
+        <p class="billboard-copy">가까이 오시면 촬영을 시작할게요.</p>
+        <div class="wave-hint"><span>✦</span> 화면 앞에 서주세요</div>
+      </article>
+
+      <article class="guide-scene scene-detected" data-scene="2" hidden>
+        <div class="detected-halo"><span></span><span></span><span></span></div>
+        <div class="people-icon solo"><i></i></div>
+        <p class="eyebrow">HELLO, THERE!</p>
+        <h1>반가워요!<br><em>멋지게 찍어드릴게요</em></h1>
+        <p>촬영할 구도를 골라볼까요?</p>
+        <div class="recognition-pill"><i></i> 손님을 찾았어요</div>
+      </article>
+
+      <article class="guide-scene scene-choice" data-scene="3" hidden>
+        <div class="scene-heading">
+          <div><p class="eyebrow">CHOOSE YOUR SHOT</p><h2>어떤 사진을<br>찍어드릴까요?</h2></div>
+          <span id="carousel-count">1 / 4</span>
+        </div>
+        <div class="photo-carousel">
+          <button id="carousel-prev" class="carousel-arrow left" type="button" aria-label="이전 예시">‹</button>
+          <div class="example-strip" id="example-strip">
+            <figure class="example-card"><div class="pose-frame"><img src="/static/pose-examples/pose1.png" alt="포즈 예시 1"></div></figure>
+            <figure class="example-card"><div class="pose-frame"><img src="/static/pose-examples/pose2.png" alt="포즈 예시 2"></div></figure>
+            <figure class="example-card"><div class="pose-frame"><img src="/static/pose-examples/pose3.png" alt="포즈 예시 3"></div></figure>
+            <figure class="example-card"><div class="pose-frame"><img src="/static/pose-examples/pose4.png" alt="포즈 예시 4"></div></figure>
+          </div>
+          <button id="carousel-next" class="carousel-arrow right" type="button" aria-label="다음 예시">›</button>
+        </div>
+        <div class="carousel-dots"><i class="active"></i><i></i><i></i><i></i></div>
+        <div class="choice-actions">
+          <button id="decline" class="choice-secondary" type="button">다음에 찍을게요</button>
+          <button class="choice-primary shot-choice" type="button" data-template="full_body">
+            <span class="shot-glyph glyph-full" aria-hidden="true"><i class="head"></i><i class="body"></i><i class="legs"></i><em class="crop"></em></span><b>전신샷</b><small>왼손을 1초 들어주세요</small><span class="gesture-meter"><i></i></span>
+          </button>
+          <button class="choice-primary shot-choice" type="button" data-template="upper_body">
+            <span class="shot-glyph glyph-upper" aria-hidden="true"><i class="head"></i><i class="body"></i><i class="legs"></i><em class="crop"></em></span><b>상반신샷</b><small>오른손을 1초 들어주세요</small><span class="gesture-meter"><i></i></span>
+          </button>
+        </div>
+      </article>
+
+      <article class="guide-scene scene-guide" data-scene="4" hidden>
+        <div class="live-bar"><span><i></i> LIVE GUIDE</span><b id="framing-mode">전신 구도</b></div>
+        <div class="camera-preview guide-preview">
+          <img class="camera-feed" src="/live/camera" alt="실시간 카메라">
+          <div class="thirds-grid"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div id="framing-instruction" class="instruction">
+          <span id="framing-arrow" class="direction-arrow">◇</span>
+          <div><b id="framing-message">몸을 실루엣에 맞춰주세요</b><small id="framing-detail">카메라가 자세를 확인하고 있어요</small></div>
+        </div>
+      </article>
+
+      <article class="guide-scene scene-burst" data-scene="5" hidden>
+        <div class="live-bar"><span><i></i> ROBOT CAMERA</span><b id="pose-name">PHOTO 0 / 30</b></div>
+        <div class="camera-preview burst-preview">
+          <img class="camera-feed" src="/live/camera" alt="실시간 카메라">
+          <img id="burst-flash" class="burst-flash" alt="방금 찍은 사진">
+          <div class="focus-frame"><i></i><i></i><i></i><i></i></div>
+          <div class="burst-badge"><i></i><b id="burst-count">촬영 중 · 0 / 30</b></div>
+          <div id="ready-overlay" class="ready-overlay" hidden><span class="ready-hand">🙌</span><b>준비되면 손을 들어주세요</b></div>
+          <div id="countdown-overlay" class="countdown-overlay" hidden><span id="countdown-number">3</span></div>
+        </div>
+        <div class="burst-progress"><i id="burst-progress"></i></div>
+        <p class="stay-natural">로봇이 천천히 움직여요 · 화면을 보며 자연스럽게 포즈를 바꿔주세요</p>
+      </article>
+
+      <article class="guide-scene scene-slideshow" data-scene="6" hidden>
+        <div class="scene-heading compact"><div><p class="eyebrow">YOUR BEST MOMENTS</p><h2>멋진 순간을<br>확인해보세요</h2></div><span id="slide-count">00 / 00</span></div>
+        <div class="slideshow-frame" id="slideshow-frame"><div class="slideshow-empty">사진을 불러오는 중이에요</div></div>
+        <div class="film-strip" id="film-strip"></div>
+      </article>
+
+      <article class="guide-scene scene-review" data-scene="7" hidden>
+        <div class="qr-layout">
+          <div class="qr-card"><img class="qr-image" alt="사진 받기 QR 코드" hidden><span>SCAN TO SAVE</span></div>
+          <div class="review-copy">
+            <p class="eyebrow">ALL DONE</p><h2>사진을<br>받아가세요</h2>
+            <p>QR을 스캔하면 휴대폰으로<br>사진을 받아갈 수 있어요.</p>
+            <div class="auto-finish"><span><i></i></span><b>30초 후 자동으로 종료돼요</b><small>천천히 QR을 스캔해 주세요</small></div>
+          </div>
+        </div>
+      </article>
+
+      <article class="guide-scene scene-goodbye" data-scene="8" hidden>
+        <div class="goodbye-glow"></div>
+        <div class="qr-card final"><img class="qr-image" alt="사진 받기 QR 코드" hidden><span>SCAN TO SAVE</span></div>
+        <div class="goodbye-copy"><span class="success-check">✓</span><p class="eyebrow">SEE YOU AGAIN</p><h2>오늘의 사진을<br><em>간직해보세요</em></h2><p>함께해서 즐거웠어요. 다음에 또 만나요!</p></div>
+      </article>
+    </section>
+
+    <section class="subtitle-card standby-subtitle">
+      <span class="voice-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <p id="caption">안녕하세요! 사진 한 장 찍고 가세요.</p>
+      <button id="speech-toggle" class="sound-button" type="button" aria-pressed="false" aria-label="음소거"><span id="speech-icon" aria-hidden="true">🔊</span><b id="speech-label">음성 켜짐</b></button>
+    </section>
+
+    <footer class="standby-footer">
+      <div class="stage-progress" aria-label="현재 단계"><i class="active"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <span>RB-Y1 · PORTRAIT EXPERIENCE</span>
+      <button id="next-stage" class="control-primary" type="button" disabled>자동 진행 대기 중 <span>·</span></button>
+    </footer>
+  </main>
+  <script src="/static/mock.js"></script>
+</body>
+</html>

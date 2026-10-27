@@ -1,0 +1,18 @@
+# Safe UI-only preview for the Jetson/StandByMe display.
+# No robot SDK, camera, MediaPipe, or phone capture device is initialized.
+runtime:
+  robot: fake
+  capture: fake
+  person_sensor: fake
+  move_seconds: 0.05
+  capture_seconds: 0.05
+  greeting_seconds: 1.5
+  preview_seconds: 3.0
+  asking_seconds: 30.0
+  gesture_hold_seconds: 1.0
+  farewell_seconds: 3.0
+  photo_target_count: 30
+
+web:
+  host: 0.0.0.0
+  port: 8000

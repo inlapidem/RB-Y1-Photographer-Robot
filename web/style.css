@@ -1,0 +1,51 @@
+:root { color-scheme: dark; font-family: Inter, Pretendard, "Noto Sans KR", system-ui, sans-serif; background: #080b13; color: #f8f8fb; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 80% 10%, #26264c 0, transparent 36%), #080b13; }
+button, a { font: inherit; }
+.kiosk { min-height: 100vh; padding: max(24px, env(safe-area-inset-top)) max(28px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(28px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 28px; }
+header, footer { display: flex; justify-content: space-between; align-items: center; }
+.brand { font-weight: 900; letter-spacing: .18em; }
+.connection { color: #ffb667; font-size: .85rem; }
+.connection.online { color: #6ee7a8; }
+.hero { margin-top: auto; }
+.eyebrow { margin: 0 0 10px; color: #8fa3ff; font-weight: 800; letter-spacing: .15em; font-size: .8rem; }
+h1 { margin: 0; font-size: clamp(2rem, 6vw, 4.8rem); line-height: 1.05; letter-spacing: -.05em; }
+.hero p:last-child, .guide-copy p:last-child { color: #adb3c7; font-size: 1.1rem; }
+.template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: auto; }
+button { color: #f7f8fc; border: 1px solid #32394f; background: rgba(22, 27, 43, .88); border-radius: 22px; padding: 22px; cursor: pointer; transition: .16s ease; }
+button:hover:not(:disabled), button:active:not(:disabled) { transform: translateY(-2px); border-color: #8394ff; background: #202944; }
+button:disabled { opacity: .32; cursor: default; }
+.template-grid button { min-height: 190px; display: flex; flex-direction: column; text-align: left; justify-content: flex-end; }
+.template-grid strong { font-size: 1.3rem; margin-top: 18px; }
+.template-grid small { color: #9ca4bb; margin-top: 5px; }
+.template-icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 15px; background: linear-gradient(135deg, #7b8cff, #a45be2); font-weight: 900; }
+footer { color: #737b91; font-size: .8rem; }
+code { color: #ccd3ff; }
+.guide-page { max-width: 900px; margin: auto; }
+.guide-copy { text-align: center; }
+.viewfinder { position: relative; flex: 1; min-height: 460px; max-height: 65vh; overflow: hidden; border: 1px solid #3a4259; border-radius: 30px; background: linear-gradient(160deg, #121827, #202b3b); }
+.thirds i { position: absolute; background: rgba(255,255,255,.18); z-index: 2; }
+.thirds i:nth-child(1), .thirds i:nth-child(2) { top: 0; bottom: 0; width: 1px; left: 33.33%; }
+.thirds i:nth-child(2) { left: 66.66%; }
+.thirds i:nth-child(3), .thirds i:nth-child(4) { left: 0; right: 0; height: 1px; top: 33.33%; }
+.thirds i:nth-child(4) { top: 66.66%; }
+.silhouette { position: absolute; inset: 12% 25%; border: 3px dashed rgba(137, 164, 255, .65); border-radius: 48% 48% 30% 30%; }
+#photo { width: 100%; height: 100%; position: absolute; object-fit: cover; z-index: 3; }
+#viewfinder-label { position: absolute; bottom: 20px; width: 100%; text-align: center; color: #707b96; font-size: .7rem; letter-spacing: .15em; }
+.actions, .debug-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+.actions button { flex: 1; }
+button.primary { border-color: transparent; background: linear-gradient(135deg, #6678ff, #9e52dc); }
+.debug-layout { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; flex: 1; align-items: center; }
+.debug-buttons { margin-top: 32px; }
+.debug-buttons button { padding: 14px 18px; }
+/* 운영자가 인식을 대신 눌러주는 버튼들. 평소 흐름이 아니라는 게 한눈에
+   보여야 해서 호박색으로 구분하고, 앞의 eyebrow가 이미 간격을 주므로
+   위 여백은 줄인다. */
+.skip-buttons { margin-top: 12px; }
+.skip-buttons button { border-color: #7a5a1d; color: #ffcf7a; }
+.skip-buttons button:not(:disabled):hover { background: rgba(255, 176, 46, .14); }
+pre { min-height: 420px; padding: 26px; border: 1px solid #31384d; border-radius: 22px; background: rgba(5,8,15,.75); color: #aebaff; font-size: 1rem; overflow: auto; }
+nav { display: flex; gap: 18px; margin-top: 26px; }
+a { color: #aebaff; }
+body[data-state="reviewing"] .silhouette, body[data-state="reviewing"] #viewfinder-label { display: none; }
+@media (max-width: 700px) { .template-grid, .debug-layout { grid-template-columns: 1fr; } .template-grid button { min-height: 125px; } .viewfinder { min-height: 380px; } }

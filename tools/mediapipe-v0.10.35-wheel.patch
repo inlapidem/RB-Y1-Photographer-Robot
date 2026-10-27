@@ -1,0 +1,54 @@
+diff --git a/mediapipe/tasks/c/BUILD b/mediapipe/tasks/c/BUILD
+index 2037570..ae904c7 100644
+--- a/mediapipe/tasks/c/BUILD
++++ b/mediapipe/tasks/c/BUILD
+@@ -32,8 +32,6 @@ cc_binary(
+         ":mediapipe_tasks_c_version_script.lds",
+         "//mediapipe/tasks/c/audio/audio_classifier:audio_classifier_c_lib",
+         "//mediapipe/tasks/c/core:common",
+-        "//mediapipe/tasks/c/genai/bundler:llm_bundler_utils_c_lib",
+-        "//mediapipe/tasks/c/genai/converter:llm_converter_c_lib",
+         "//mediapipe/tasks/c/metadata:flatbuffer_api_c_lib",
+         "//mediapipe/tasks/c/text/language_detector:language_detector_c_lib",
+         "//mediapipe/tasks/c/text/text_classifier:text_classifier_c_lib",
+diff --git a/setup.py b/setup.py
+index aa0720c..d291a2b 100644
+--- a/setup.py
++++ b/setup.py
+@@ -243,6 +243,5 @@ class BuildExtension(build_ext.build_ext):
+         '--compilation_mode=opt',
+         '--copt=-DNDEBUG',
+         '--keep_going',
+-        '--define=ENABLE_ODML_CONVERTER=1',
+         str(ext.bazel_target),
+     ] + GPU_OPTIONS
+@@ -250,6 +249,6 @@ class BuildExtension(build_ext.build_ext):
+     if extra_args:
+       bazel_command += extra_args
+     if not self.link_opencv and not IS_WINDOWS:
+-      bazel_command.append('--define=OPENCV=source')
++      pass  # Link the host OpenCV selected by the WORKSPACE linux_opencv repo.
+ 
+     _invoke_shell_command(bazel_command)
+
+diff --git a/third_party/opencv_linux.BUILD b/third_party/opencv_linux.BUILD
+index 261a98f..6077a1c 100644
+--- a/third_party/opencv_linux.BUILD
++++ b/third_party/opencv_linux.BUILD
+@@ -18,7 +18,7 @@ cc_library(
+         #"include/aarch64-linux-gnu/opencv4/opencv2/cvconfig.h",
+         #"include/arm-linux-gnueabihf/opencv4/opencv2/cvconfig.h",
+         #"include/x86_64-linux-gnu/opencv4/opencv2/cvconfig.h",
+-        #"include/opencv4/opencv2/**/*.h*",
++        "include/opencv4/opencv2/**/*.h*",
+     ]),
+     includes = [
+         # For OpenCV 4.x
+@@ -26,6 +26,6 @@ cc_library(
+         #"include/arm-linux-gnueabihf/opencv4/",
+         #"include/x86_64-linux-gnu/opencv4/",
+-        #"include/opencv4/",
++        "include/opencv4/",
+     ],
+     linkopts = [
+         "-l:libopencv_core.so",

@@ -1,0 +1,886 @@
+<title>Physical AI Camera Operator — 소프트웨어 아키텍처</title>
+<style>
+  :root {
+    --bg: #F4F2EC;
+    --surface: #FFFFFF;
+    --surface-2: #FBF9F4;
+    --border: #DDD7C8;
+    --border-strong: #C7BFA9;
+    --text: #1E1B15;
+    --text-dim: #6B6455;
+    --accent: #B4501A;
+    --accent-soft: #F1DFC9;
+    --accent2: #1B6B72;
+    --accent2-soft: #D8ECEC;
+    --good: #2E7D4F;
+    --good-soft: #DFF0E4;
+    --warn: #A6790A;
+    --warn-soft: #FBEBC9;
+    --danger: #AE3729;
+    --danger-soft: #F8DEDA;
+    --mono-bg: #1E1B15;
+    --mono-text: #EFE9DD;
+    --font-display: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, "Segoe UI", sans-serif;
+    --font-body: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "D2Coding", "Cascadia Code", "SF Mono", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15181C;
+      --surface: #1B1F24;
+      --surface-2: #20252B;
+      --border: #2B3238;
+      --border-strong: #3B444C;
+      --text: #E9E6DD;
+      --text-dim: #9BA3AA;
+      --accent: #E2823F;
+      --accent-soft: #3A2A1C;
+      --accent2: #4FB4BC;
+      --accent2-soft: #1B3438;
+      --good: #4CAF77;
+      --good-soft: #17301F;
+      --warn: #D2A83D;
+      --warn-soft: #332608;
+      --danger: #E2685A;
+      --danger-soft: #3A1D19;
+      --mono-bg: #0E1013;
+      --mono-text: #E9E6DD;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #15181C; --surface: #1B1F24; --surface-2: #20252B; --border: #2B3238; --border-strong: #3B444C;
+    --text: #E9E6DD; --text-dim: #9BA3AA; --accent: #E2823F; --accent-soft: #3A2A1C; --accent2: #4FB4BC;
+    --accent2-soft: #1B3438; --good: #4CAF77; --good-soft: #17301F; --warn: #D2A83D; --warn-soft: #332608;
+    --danger: #E2685A; --danger-soft: #3A1D19; --mono-bg: #0E1013; --mono-text: #E9E6DD;
+  }
+  :root[data-theme="light"] {
+    --bg: #F4F2EC; --surface: #FFFFFF; --surface-2: #FBF9F4; --border: #DDD7C8; --border-strong: #C7BFA9;
+    --text: #1E1B15; --text-dim: #6B6455; --accent: #B4501A; --accent-soft: #F1DFC9; --accent2: #1B6B72;
+    --accent2-soft: #D8ECEC; --good: #2E7D4F; --good-soft: #DFF0E4; --warn: #A6790A; --warn-soft: #FBEBC9;
+    --danger: #AE3729; --danger-soft: #F8DEDA; --mono-bg: #1E1B15; --mono-text: #EFE9DD;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .page {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15.5px;
+    line-height: 1.7;
+    padding: 0 0 80px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 28px; }
+
+  /* ── cover ── */
+  header.cover {
+    background: var(--text);
+    color: var(--bg);
+    padding: 52px 0 40px;
+    margin-bottom: 44px;
+  }
+  header.cover .wrap { max-width: 920px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 14px;
+  }
+  header.cover h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 1.3;
+    text-wrap: balance;
+    margin: 0 0 12px;
+  }
+  header.cover .tagline {
+    max-width: 46em;
+    font-size: 16px;
+    opacity: .82;
+    margin: 0 0 22px;
+  }
+  header.cover .meta {
+    display: flex;
+    gap: 22px;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    opacity: .68;
+  }
+
+  /* ── section shell ── */
+  section { margin-bottom: 52px; }
+  h2 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 800;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  h2 .no {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    background: var(--accent);
+    color: var(--bg);
+    border-radius: 6px;
+    padding: 3px 8px;
+    flex: 0 0 auto;
+  }
+  h2 .no.alt { background: var(--accent2); }
+  .section-lede { color: var(--text-dim); max-width: 44em; margin: 0 0 18px; }
+  h3 { font-size: 16px; font-weight: 700; margin: 22px 0 8px; }
+
+  p { max-width: 46em; margin: 0 0 12px; }
+  ul, ol { margin: 0 0 12px 22px; padding: 0; max-width: 46em; }
+  li { margin-bottom: 5px; }
+  strong { font-weight: 700; }
+  code {
+    font-family: var(--font-mono);
+    font-size: .89em;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  pre {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--mono-bg);
+    color: var(--mono-text);
+    padding: 16px 18px;
+    border-radius: 10px;
+    overflow-x: auto;
+    margin: 0 0 14px;
+  }
+  pre code { background: none; border: none; padding: 0; color: inherit; }
+
+  /* ── callouts ── */
+  .callout {
+    border: 1px solid var(--border-strong);
+    border-left: 4px solid var(--text-dim);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+  }
+  .callout .k {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .callout.critical { border-left-color: var(--danger); background: var(--danger-soft); }
+  .callout.critical .k { color: var(--danger); }
+  .callout.warn { border-left-color: var(--warn); background: var(--warn-soft); }
+  .callout.warn .k { color: var(--warn); }
+  .callout.good { border-left-color: var(--good); background: var(--good-soft); }
+  .callout.good .k { color: var(--good); }
+  .callout.note { border-left-color: var(--accent2); background: var(--accent2-soft); }
+  .callout.note .k { color: var(--accent2); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ── tables ── */
+  .table-scroll { overflow-x: auto; margin: 12px 0 18px; border-radius: 10px; border: 1px solid var(--border); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--surface); min-width: 560px; }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--text-dim); background: var(--surface-2); font-weight: 700; }
+  tr:last-child td { border-bottom: none; }
+  td code { white-space: nowrap; }
+
+  /* pill / status chips */
+  .pill { display: inline-block; font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+  .pill.p0 { background: var(--danger-soft); color: var(--danger); }
+  .pill.p1 { background: var(--warn-soft); color: var(--warn); }
+  .pill.p2 { background: var(--accent2-soft); color: var(--accent2); }
+  .pill.confirmed { background: var(--good-soft); color: var(--good); }
+  .pill.proposed { background: var(--accent-soft); color: var(--accent); }
+
+  /* ── diagrams ── */
+  figure { margin: 18px 0 24px; }
+  .diagram-frame {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    overflow-x: auto;
+  }
+  .diagram-frame svg { display: block; width: 100%; height: auto; min-width: 640px; }
+  figcaption { font-size: 13px; color: var(--text-dim); margin-top: 10px; max-width: 50em; }
+  svg text { font-family: var(--font-body); }
+  svg .lbl-mono { font-family: var(--font-mono); }
+
+  .foot {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+  }
+</style>
+
+<div class="page">
+
+<header class="cover">
+  <div class="wrap">
+    <div class="eyebrow">Roboticus Hackathon · GeekSeek · 2026-08-06 초안</div>
+    <h1>Physical AI Camera Operator<br>소프트웨어 아키텍처 설계</h1>
+    <p class="tagline">
+      phorce SDK 문서(퀵가이드·튜토리얼·매뉴얼·studio·pcm)와 팀 아이디어를 맞춰본 결과를 바탕으로,
+      실제로 손에 쥔 하드웨어에서 돌아가는 소프트웨어 구조를 다시 짠 문서입니다.
+    </p>
+    <div class="meta">
+      <span>대상: Jetson + pcm + phact 로봇팔 · iPad ×2 · 엔드이펙터 폰</span>
+      <span>목적: 빌드 순서 합의</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2><span class="no">1</span>먼저 — SDK가 실제로 허용하는 것</h2>
+  <p class="section-lede">원래 제안서는 임피던스 제어·직접교시·잔차보정을 실시간 코드로 구현하는 걸 전제로 했는데,
+    해커톤 SDK 문서를 읽어보니 참가자 코드가 만질 수 있는 표면이 그보다 훨씬 좁습니다. 이걸 먼저 인정하고 설계해야
+    현장에서 안 되는 걸 붙잡고 시간을 버리지 않습니다.</p>
+
+  <div class="callout critical">
+    <span class="k">가장 중요한 제약</span>
+    <p>Jetson 코드가 로봇팔에 할 수 있는 일은 <strong>딱 두 가지</strong>뿐입니다 — <code>/phorce/feedback</code>으로
+      12축 상태를 1kHz로 <strong>읽기</strong>, 그리고 미리 저장된 <strong>모션 슬롯 번호(1~50) 하나를 재생</strong>.
+      관절 목표위치·피드포워드토크·Kp·Kd를 실시간으로 넣는 저수준 명령은 매뉴얼에 "참가자 API가 아님(의도적 비공개)"으로
+      명시돼 있습니다. 즉 <strong>실시간 임피던스 제어·연속 시각 서보잉·ASAP 잔차보정은 실물에서 이번 대회 범위 밖</strong>입니다.</p>
+  </div>
+
+  <div class="callout good">
+    <span class="k">그런데 오히려 잘 맞는 부분</span>
+    <p>"직접교시"는 실시간 코드가 아니라 <strong>phorce Studio</strong>라는 별도 GUI로 합니다 — 서보를 끄고 손으로
+      로봇을 움직이면 pcm이 1kHz로 궤적을 기록해 SD카드에 슬롯으로 저장합니다. 그리고 원래 제안서의 <strong>GaP
+      스킬 그래프</strong>·<strong>DREAM-Chunk(검증된 동작 사전)</strong> 개념은 "이산적인 동작 번호를 상황에 맞춰
+      고른다"는 이 SDK의 모델과 정확히 같은 모양입니다. 그러니 그 두 아이디어를 설계의 중심으로 그대로 가져가면 됩니다.</p>
+  </div>
+
+  <div class="callout note">
+    <span class="k">추가 공지로 확인된 것 — P-Vector</span>
+    <p>운영진이 추가로 공유한 자료(<code>해커톤_추가공지_p_vector.pdf</code>)를 보면, 모션 슬롯의 실체인
+      <code>MotionMap.csv</code>는 각 축마다 <code>P(i) = [yd, Ltraj, s0, sd]</code>(목표각도·구간시간·가속·감속)
+      키프레임을 이어 붙인 5차 다항식 궤적 표입니다. 즉 <strong>손으로 가르치는 것 말고, 이 포맷대로 CSV를 직접
+      계산해서 만드는 "프로그래밍 방식 모션 저작"도 가능</strong>합니다 — 여전히 사전 저작 단계일 뿐 실시간 스트리밍은
+      아니지만, 팬/틸트처럼 정밀한 타이밍이 필요한 움직임엔 손교시보다 이쪽이 낫습니다. 자세한 포맷은 §6-1 참조.</p>
+  </div>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>제안서에 있던 것</th><th>이번 대회 실물에서</th></tr>
+    <tr><td>임피던스 제어·중력보상 직접교시</td><td><span class="pill p0">불가(참가자 코드)</span> → phorce Studio로 사전 교시, 실행 중엔 재생만</td></tr>
+    <tr><td>토크 기반 접촉 감지</td><td><span class="pill confirmed">가능(약화된 형태)</span> → <code>current_a</code>/<code>dob_a</code> 모니터링으로 "감지"까지만, 실시간 순응은 불가</td></tr>
+    <tr><td>접촉 시 강성 낮춰 부드럽게 양보</td><td><span class="pill p0">불가</span> → 대신 재생 중단 + 준비된 "후퇴/안전" 슬롯 재생으로 대체</td></tr>
+    <tr><td>GaP 스킬 그래프</td><td><span class="pill confirmed">그대로 적용</span> → 슬롯 선택 정책으로 직결</td></tr>
+    <tr><td>DREAM-Chunk 동작 사전</td><td><span class="pill confirmed">그대로 적용</span> → phorce 모션 슬롯 1~50이 곧 그 사전</td></tr>
+    <tr><td>ASAP 잔차 보정</td><td><span class="pill p0">불가(저수준 접근 없음)</span> → 컨셉 슬라이드/향후계획으로만</td></tr>
+    <tr><td>연속 피사체 추적(Tracking AI)</td><td><span class="pill p0">불가</span> → 대신 "이산적 재구도"로 재정의(아래 §8) — 원래 차별화 포인트("Tracking이 아니라 Framing")와 오히려 방향이 맞음</td></tr>
+    <tr><td>정밀한 카메라 무빙(팬/틸트 스윕 등)</td><td><span class="pill confirmed">가능</span> → 손교시 대신 <strong>P-Vector 직접 생성</strong>으로 <code>MotionMap.csv</code>를 코드로 작성(§6-1) — 여전히 사전 저작, 실시간 아님</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">2</span>물리 구성 확정 — 누가 무엇을 하나</h2>
+  <p class="section-lede">대화에서 정리된 내용 + 미정이었던 부분에 대한 구체적 제안입니다. "제안"이라고 표시한 항목은
+    이번 주 안에 팀이 확인해줘야 진행할 수 있는 지점입니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th style="width:150px;">장치</th><th>역할</th><th style="width:110px;">상태</th></tr>
+    <tr>
+      <td><strong>iPad 1</strong><br><span class="lbl-mono" style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">가로 거치 · 상단</span></td>
+      <td>얼굴·상태 UI와 구도 템플릿 선택을 담당. 표정·모드(전신/상반신/제품)·상태(대기중/촬영중/완료)를 보여주고 가벼운 터치 입력을 받음.</td>
+      <td><span class="pill confirmed">확정</span></td>
+    </tr>
+    <tr>
+      <td><strong>iPad 2</strong><br><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">세로 거치 · 하단</span></td>
+      <td>라이브 프리뷰 + 선택 키오스크. 실시간 화면과 모드/재촬영 버튼을 보여주고 터치를 받음.</td>
+      <td><span class="pill confirmed">확정</span></td>
+    </tr>
+    <tr>
+      <td><strong>C270 웹캠</strong><br><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">iPad 스탠드 상단 고정</span></td>
+      <td>실시간 인식 전용 센서로 고정. 사람 탐지·포즈 추정·제품 유무 판단을 여기서 처리 (USB로 바로 프레임을 당길 수 있어 지연이 가장 적음). 최종 사진 촬영에는 관여하지 않음.</td>
+      <td><span class="pill confirmed">확정</span></td>
+    </tr>
+    <tr>
+      <td><strong>엔드이펙터 폰</strong><br><span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);">로봇팔 끝에 장착</span></td>
+      <td>실제 촬영 담당. <strong>아이폰 희망 확인.</strong> 아이폰은 "커스텀 앱 없이 헤드리스 원격 셔터"가 안드로이드만큼
+        간단하지 않음 — 오늘 안에 짧게 검증하고 결정(§11 트랙 C, §10). 최악의 경우에도 iPad 2대는 그대로 두고
+        <strong>엔드이펙터 폰만 안드로이드로 교체</strong>하면 나머지 설계는 전혀 안 바뀜(별개 장치라 서로 독립적).</td>
+      <td><span class="pill proposed">확인 중 — 오늘 결정</span></td>
+    </tr>
+    <tr>
+      <td><strong>로봇팔 ↔ iPad 스탠드</strong></td>
+      <td>물리적으로 분리된 두 대. 스탠드(C270+iPad2)는 <strong>항상 피사체를 보는 고정 "감독의 눈"</strong>,
+        로봇팔(+엔드이펙터 폰)은 <strong>선택된 구도로 움직여 실제로 찍는 손</strong> 역할로 나눔.</td>
+      <td><span class="pill confirmed">확정(구조상 자연스러움)</span></td>
+    </tr>
+    <tr>
+      <td><strong>iPad ↔ Jetson 연동 방식</strong></td>
+      <td>네이티브 iOS 앱을 만들지 않고, Jetson이 로컬 웹서버(FastAPI 등)를 띄워 두 iPad는
+        Safari를 <strong>전체화면(가이드 접근 모드)</strong>으로 그 페이지에 고정. 상태는 웹소켓/SSE로 밀어주고,
+        iPad2의 버튼·프리뷰는 HTTP/스트림. 앱 개발·배포 과정이 통째로 사라짐 — 해커톤 일정에서 가장 큰 리스크 제거.</td>
+      <td><span class="pill confirmed">확정</span></td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">3</span>시스템 다이어그램</h2>
+  <p class="section-lede">점선 상자가 phorce 쪽 경계입니다 — 그 안으로는 모션 슬롯 API(⬆️읽기 / ⬇️재생 하나)로만 드나들 수
+    있고, 그 바깥은 전부 이번에 우리가 직접 짜는 코드입니다.</p>
+
+  <figure>
+    <div class="diagram-frame">
+      <svg viewBox="0 0 1160 660" role="img" aria-label="iPad 스탠드의 C270과 iPad 두 대, Jetson의 네 소프트웨어 모듈, phorce 경계 안의 pcm·phact·로봇팔·엔드이펙터 폰 사이의 데이터 흐름을 보여주는 시스템 다이어그램">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+
+        <!-- zone: ipad stand -->
+        <rect x="20" y="30" width="230" height="600" rx="14" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-dasharray="5 5"/>
+        <text x="135" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">iPad 스탠드 (고정)</text>
+
+        <rect x="50" y="60" width="170" height="70" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="135" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">C270 웹캠</text>
+        <text x="135" y="108" text-anchor="middle" font-size="11" fill="var(--text-dim)">인식 전용 센서</text>
+
+        <rect x="50" y="270" width="170" height="80" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="135" y="300" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">iPad 1</text>
+        <text x="135" y="318" text-anchor="middle" font-size="11" fill="var(--text-dim)">얼굴 · 상태 UI</text>
+        <text x="135" y="333" text-anchor="middle" font-size="11" fill="var(--text-dim)">(읽기 전용)</text>
+
+        <rect x="50" y="480" width="170" height="90" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="135" y="510" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">iPad 2</text>
+        <text x="135" y="528" text-anchor="middle" font-size="11" fill="var(--text-dim)">라이브 프리뷰</text>
+        <text x="135" y="543" text-anchor="middle" font-size="11" fill="var(--text-dim)">+ 선택 키오스크</text>
+
+        <!-- zone: jetson -->
+        <rect x="300" y="30" width="330" height="600" rx="14" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-dasharray="5 5"/>
+        <text x="465" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">Jetson (우리가 짜는 코드)</text>
+
+        <rect x="330" y="60" width="270" height="70" rx="10" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+        <text x="465" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">인식(Perception)</text>
+        <text x="465" y="108" text-anchor="middle" font-size="11" fill="var(--text-dim)">사람·포즈·제품 탐지 · 15–30Hz</text>
+
+        <rect x="330" y="160" width="270" height="100" rx="10" fill="var(--accent-soft)" stroke="var(--accent)"/>
+        <text x="465" y="192" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">오케스트레이터 (GaP)</text>
+        <text x="465" y="210" text-anchor="middle" font-size="11" fill="var(--text-dim)">이벤트 상태 전이 → 슬롯 선택 → play()</text>
+        <text x="465" y="226" text-anchor="middle" font-size="11" fill="var(--text-dim)">접촉 이상 감지 반영</text>
+        <text x="465" y="242" text-anchor="middle" font-size="11" fill="var(--text-dim)">(§5·§7)</text>
+
+        <rect x="330" y="290" width="270" height="70" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="465" y="320" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">피드백 리스너</text>
+        <text x="465" y="338" text-anchor="middle" font-size="11" fill="var(--text-dim)">1kHz 콜백 — 최신값 저장만</text>
+
+        <rect x="330" y="390" width="270" height="70" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="465" y="420" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">캡처 브릿지</text>
+        <text x="465" y="438" text-anchor="middle" font-size="11" fill="var(--text-dim)">폰 셔터 HTTP 호출 · 사진 수신</text>
+
+        <rect x="330" y="490" width="270" height="90" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="465" y="520" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">키오스크 서버</text>
+        <text x="465" y="538" text-anchor="middle" font-size="11" fill="var(--text-dim)">로컬 웹서버 — 두 iPad에 상태/프리뷰 공급</text>
+        <text x="465" y="553" text-anchor="middle" font-size="11" fill="var(--text-dim)">(FastAPI + WebSocket)</text>
+
+        <!-- zone: phorce boundary -->
+        <rect x="680" y="30" width="460" height="600" rx="14" fill="none" stroke="var(--danger)" stroke-opacity="0.55" stroke-dasharray="6 4"/>
+        <text x="910" y="20" text-anchor="middle" font-size="12.5" font-weight="700" fill="var(--danger)">phorce 경계 — 모션 슬롯 API만 통과</text>
+
+        <rect x="710" y="60" width="180" height="70" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="800" y="90" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">pcm</text>
+        <text x="800" y="108" text-anchor="middle" font-size="11" fill="var(--text-dim)">모션 슬롯 카탈로그 정본</text>
+
+        <rect x="710" y="180" width="180" height="80" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="800" y="212" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">phact ×N + 팔</text>
+        <text x="800" y="230" text-anchor="middle" font-size="11" fill="var(--text-dim)">교시된 슬롯 재생</text>
+        <text x="800" y="245" text-anchor="middle" font-size="11" fill="var(--text-dim)">(phorce Studio로 사전 교시)</text>
+
+        <rect x="710" y="340" width="180" height="80" rx="10" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="800" y="372" text-anchor="middle" font-size="13" font-weight="700" fill="currentColor">엔드이펙터 폰</text>
+        <text x="800" y="390" text-anchor="middle" font-size="11" fill="var(--text-dim)">실제 촬영 카메라</text>
+        <text x="800" y="405" text-anchor="middle" font-size="11" fill="var(--text-dim)">(IP Webcam 앱)</text>
+
+        <line x1="800" y1="260" x2="800" y2="340" stroke="currentColor" stroke-opacity="0.4"/>
+        <text x="830" y="303" font-size="10.5" fill="var(--text-dim)">팔에 장착</text>
+
+        <!-- arrows: C270 -> perception -->
+        <line x1="220" y1="95" x2="325" y2="95" stroke="var(--accent2)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="222" y="86" font-size="10.5" fill="var(--accent2)">USB 프레임 15–30fps</text>
+
+        <!-- perception -> decision -->
+        <line x1="465" y1="130" x2="465" y2="158" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow)"/>
+
+        <!-- decision -> pcm : play(id) -->
+        <path d="M600,195 C660,195 665,95 705,95" fill="none" stroke="var(--danger)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="618" y="150" font-size="10.5" fill="var(--danger)">⬇ play(id) 1개씩</text>
+
+        <!-- pcm -> feedback listener -->
+        <path d="M705,115 C660,115 655,325 605,325" fill="none" stroke="var(--accent2)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="612" y="270" font-size="10.5" fill="var(--accent2)" text-anchor="end">⬆ /phorce/feedback 1kHz(읽기)</text>
+
+        <!-- feedback -> decision (contact) -->
+        <line x1="465" y1="290" x2="465" y2="262" stroke="var(--danger)" stroke-opacity="0.7" stroke-width="1.4" marker-end="url(#arrow)"/>
+        <text x="472" y="280" font-size="10" fill="var(--danger)">current_a/dob_a 이상</text>
+
+        <!-- decision -> capture bridge -->
+        <line x1="465" y1="260" x2="465" y2="388" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow)"/>
+        <text x="472" y="330" font-size="10" fill="var(--text-dim)" transform="rotate(0)"></text>
+
+        <!-- capture bridge <-> phone -->
+        <path d="M600,415 C650,415 660,378 705,378" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="613" y="405" font-size="10.5" fill="var(--accent)">GET /shot.jpg</text>
+        <path d="M705,395 C660,395 655,435 600,435" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="613" y="455" font-size="10.5" fill="var(--accent)">JPEG 응답</text>
+
+        <!-- capture bridge -> kiosk server -->
+        <line x1="465" y1="460" x2="465" y2="488" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow)"/>
+
+        <!-- kiosk server -> ipad1 -->
+        <path d="M330,505 C270,470 260,340 218,318" fill="none" stroke="var(--accent2)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="235" y="410" font-size="10.5" fill="var(--accent2)">SSE 상태 push</text>
+
+        <!-- kiosk server <-> ipad2 -->
+        <path d="M330,555 C280,555 270,545 222,535" fill="none" stroke="var(--accent2)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <path d="M222,555 C270,565 280,570 330,565" fill="none" stroke="var(--accent2)" stroke-width="1.6" marker-end="url(#arrow)"/>
+        <text x="230" y="600" font-size="10.5" fill="var(--accent2)">MJPEG 프리뷰 / 터치 POST</text>
+      </svg>
+    </div>
+    <figcaption>C270과 두 iPad(왼쪽, 고정 스탠드)는 인식·표시만 담당하고, 로봇팔·phact·엔드이펙터 폰(오른쪽, 점선 안)은
+      phorce의 "동작 번호 하나 재생"이라는 좁은 문으로만 명령을 받습니다. 가운데 Jetson이 이 둘을 잇는 유일한 지점입니다.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="no">4</span>두 개의 시계 — 루프 속도를 섞지 않기</h2>
+  <p class="section-lede">phorce 튜토리얼이 가장 강조하는 규칙이 그대로 우리 설계의 뼈대가 됩니다: <strong>빠른 일과
+    느린 일을 같은 함수에서 하지 않기.</strong></p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>루프</th><th>속도</th><th>하는 일</th><th>절대 하지 않는 일</th></tr>
+    <tr><td><strong>피드백 콜백</strong></td><td>1kHz</td><td>최신 12축 상태·<code>current_a</code>/<code>dob_a</code> 저장만</td><td><code>play()</code> 호출, 판단 로직</td></tr>
+    <tr><td><strong>인식 루프</strong></td><td>15–30Hz</td><td>C270 프레임에서 사람/포즈/제품 상태 갱신</td><td>로봇 명령 직접 전송</td></tr>
+    <tr><td><strong>오케스트레이터(GaP)</strong></td><td>이벤트 기반 + 제한된 타이머</td><td>상태 전이·슬롯 선택 → <code>robot.play(id)</code> 1회</td><td>1kHz 데이터 순회, 전체 흐름 폴링</td></tr>
+    <tr><td><strong>키오스크 서버</strong></td><td>이벤트 기반</td><td>상태 변화 시에만 iPad로 push</td><td>폴링으로 iPad 쪽을 괴롭히기</td></tr>
+  </table>
+  </div>
+
+  <div class="callout warn">
+    <span class="k">흔한 실수 그대로 옮겨옴</span>
+    <p>매뉴얼에 나온 두 함정을 우리 코드에도 똑같이 적용: ① <code>/phorce/feedback</code> 구독은 반드시
+      <code>qos_profile_sensor_data</code>로 — 기본 reliable로 하면 에러 없이 아무것도 안 옵니다. ②
+      각 축 값을 쓰기 전엔 <code>valid</code>만 신뢰 — <code>!stale</code>로 대신하면 안 됩니다(한 번도 안 온 축은
+      stale도 아님).</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">5</span>판단 루프 — GaP 스킬 그래프</h2>
+  <p class="section-lede">원래 제안서의 스킬 그래프를 phorce의 실제 동작 방식(모션 슬롯 하나 재생, 큐 없음,
+    거절 코드 5/12/13)에 맞춰 그대로 옮긴 버전입니다.</p>
+
+  <figure>
+    <div class="diagram-frame">
+      <svg viewBox="0 0 1160 620" role="img" aria-label="사람 탐지부터 슬롯 선택, play 요청, 그리고 성공·BUSY·운영자개입·접촉이상 네 가지 결과에 따른 후속 동작까지 이어지는 판단 루프 흐름도">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor" />
+          </marker>
+        </defs>
+
+        <!-- spine -->
+        <g font-size="13" font-weight="700">
+          <rect x="30" y="20" width="200" height="56" rx="9" fill="var(--surface-2)" stroke="currentColor"/>
+          <text x="130" y="53" text-anchor="middle" fill="currentColor">사람 탐지</text>
+
+          <rect x="30" y="110" width="200" height="56" rx="9" fill="var(--surface-2)" stroke="currentColor"/>
+          <text x="130" y="135" text-anchor="middle" fill="currentColor">상황 인식</text>
+          <text x="130" y="151" text-anchor="middle" font-size="11" font-weight="400" fill="var(--text-dim)">포즈 · 제품 유무</text>
+
+          <rect x="30" y="200" width="200" height="56" rx="9" fill="var(--surface-2)" stroke="currentColor"/>
+          <text x="130" y="225" text-anchor="middle" fill="currentColor">구도 매칭</text>
+          <text x="130" y="241" text-anchor="middle" font-size="11" font-weight="400" fill="var(--text-dim)">모드 + 템플릿(§8)</text>
+
+          <rect x="30" y="290" width="200" height="56" rx="9" fill="var(--accent-soft)" stroke="var(--accent)"/>
+          <text x="130" y="315" text-anchor="middle" fill="currentColor">슬롯 선택</text>
+          <text x="130" y="331" text-anchor="middle" font-size="11" font-weight="400" fill="var(--text-dim)">모션 슬롯 1~50 중</text>
+
+          <rect x="30" y="380" width="200" height="56" rx="9" fill="var(--danger-soft)" stroke="var(--danger)"/>
+          <text x="130" y="413" text-anchor="middle" fill="currentColor">robot.play(id)</text>
+        </g>
+
+        <line x1="130" y1="76" x2="130" y2="108" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow2)"/>
+        <line x1="130" y1="166" x2="130" y2="198" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow2)"/>
+        <line x1="130" y1="256" x2="130" y2="288" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow2)"/>
+        <line x1="130" y1="346" x2="130" y2="378" stroke="currentColor" stroke-opacity="0.5" marker-end="url(#arrow2)"/>
+
+        <!-- outcomes fan out right -->
+        <line x1="230" y1="408" x2="290" y2="70" stroke="currentColor" stroke-opacity="0.4" marker-end="url(#arrow2)"/>
+        <line x1="230" y1="408" x2="290" y2="220" stroke="currentColor" stroke-opacity="0.4" marker-end="url(#arrow2)"/>
+        <line x1="230" y1="408" x2="290" y2="400" stroke="currentColor" stroke-opacity="0.4" marker-end="url(#arrow2)"/>
+        <line x1="230" y1="408" x2="290" y2="540" stroke="currentColor" stroke-opacity="0.4" marker-end="url(#arrow2)"/>
+
+        <!-- outcome: success -->
+        <rect x="300" y="30" width="220" height="80" rx="9" fill="var(--good-soft)" stroke="var(--good)"/>
+        <text x="410" y="55" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">성공 (ok)</text>
+        <text x="410" y="73" text-anchor="middle" font-size="11" fill="var(--text-dim)">프레이밍 점수 재확인</text>
+        <text x="410" y="88" text-anchor="middle" font-size="11" fill="var(--text-dim)">→ 통과 시 캡처 트리거</text>
+
+        <line x1="520" y1="70" x2="580" y2="70" stroke="var(--good)" stroke-width="1.4" marker-end="url(#arrow2)"/>
+        <rect x="590" y="30" width="220" height="80" rx="9" fill="var(--surface-2)" stroke="currentColor"/>
+        <text x="700" y="55" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">캡처 · 대기 복귀</text>
+        <text x="700" y="73" text-anchor="middle" font-size="11" fill="var(--text-dim)">폰 셔터 → iPad2 미리보기</text>
+        <text x="700" y="88" text-anchor="middle" font-size="11" fill="var(--text-dim)">→ 기본 자세로 복귀</text>
+
+        <!-- outcome: BUSY code 5 -->
+        <rect x="300" y="180" width="220" height="80" rx="9" fill="var(--accent2-soft)" stroke="var(--accent2)"/>
+        <text x="410" y="205" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">BUSY (코드 5)</text>
+        <text x="410" y="223" text-anchor="middle" font-size="11" fill="var(--text-dim)">유일하게 재시도하는 경우</text>
+        <text x="410" y="238" text-anchor="middle" font-size="11" fill="var(--text-dim)">다음 판단 틱에 다시 시도</text>
+
+        <path d="M300,220 C 260,220 260,300 300,300" fill="none" stroke="var(--accent2)" stroke-opacity="0.6" marker-end="url(#arrow2)"/>
+
+        <!-- outcome: needs operator 12/13 -->
+        <rect x="300" y="360" width="220" height="80" rx="9" fill="var(--warn-soft)" stroke="var(--warn)"/>
+        <text x="410" y="385" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">운영자 개입 (12·13)</text>
+        <text x="410" y="403" text-anchor="middle" font-size="11" fill="var(--text-dim)">기다려도 안 풀림</text>
+        <text x="410" y="418" text-anchor="middle" font-size="11" fill="var(--text-dim)">→ iPad1/2에 안내 표시</text>
+
+        <!-- outcome: contact anomaly -->
+        <rect x="300" y="500" width="220" height="90" rx="9" fill="var(--danger-soft)" stroke="var(--danger)"/>
+        <text x="410" y="525" text-anchor="middle" font-size="12.5" font-weight="700" fill="currentColor">접촉 이상 (§7)</text>
+        <text x="410" y="543" text-anchor="middle" font-size="11" fill="var(--text-dim)">dob_a 스파이크 감지 시</text>
+        <text x="410" y="558" text-anchor="middle" font-size="11" fill="var(--text-dim)">재생 중단 → 안전 슬롯</text>
+        <text x="410" y="573" text-anchor="middle" font-size="11" fill="var(--text-dim)">재생 → 사람 재탐색</text>
+      </svg>
+    </div>
+    <figcaption>왼쪽 다섯 단계는 의미 있는 이벤트가 들어올 때 전이하는 스킬 그래프이고, 오른쪽은 <code>play()</code> 결과에 따른 네 갈래
+      후속 동작입니다. "BUSY"만 재시도 대상이고 나머지는 화면 안내나 대체 슬롯으로 처리합니다(매뉴얼 §9 거절 코드 규칙 그대로).</figcaption>
+  </figure>
+</section>
+
+<section>
+  <h2><span class="no">6</span>모션 슬롯 라이브러리 계획 (DREAM-Chunk)</h2>
+  <p class="section-lede">전부 <strong>phorce Studio</strong>에서 서보를 끄고 손으로 가르쳐(교시) SD카드에 저장합니다.
+    Jetson 코드는 아래 이름표만 알면 되고, 실제 번호는 교시하면서 채우면 됩니다 — 그래서 슬롯 번호가 아니라
+    <strong>카테고리</strong>로 코드를 짜고, 번호는 설정 파일 하나로 매핑합니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>카테고리</th><th>슬롯 예시</th><th>쓰임</th></tr>
+    <tr><td><code>home</code></td><td>1</td><td>기본 대기 자세. 부팅 자세와 겸용.</td></tr>
+    <tr><td><code>frame.full_body</code></td><td>2</td><td>전신 구도 위치</td></tr>
+    <tr><td><code>frame.upper_body</code></td><td>3</td><td>상반신 구도 위치</td></tr>
+    <tr><td><code>frame.product_closeup</code></td><td>4</td><td>제품 클로즈업 위치</td></tr>
+    <tr><td><code>pan.left</code> / <code>pan.right</code></td><td>5, 6</td><td>같은 구도의 좌/우 변형 — 연속추적 대신 이산 재구도용</td></tr>
+    <tr><td><code>approach</code> / <code>retreat</code></td><td>7, 8</td><td>접근/후퇴</td></tr>
+    <tr><td><code>safe.retreat</code></td><td>9</td><td>접촉 이상 감지 시 재생하는 안전 동작</td></tr>
+    <tr><td><code>custom.*</code></td><td>10~50</td><td>현장에서 추가로 가르치는 프리셋(예: 특정 핫플레이스용 구도)</td></tr>
+  </table>
+  </div>
+
+  <pre><code># slot_map.yaml — Jetson 쪽 설정, Studio에서 실제 번호가 정해지면 채움
+home: 1
+frame.full_body: 2
+frame.upper_body: 3
+frame.product_closeup: 4
+pan.left: 5
+pan.right: 6
+approach: 7
+retreat: 8
+safe.retreat: 9
+</code></pre>
+
+  <div class="callout note">
+    <span class="k">현장 팁</span>
+    <p>Studio의 교시 화면은 저장 전 화면에서 미리보기가 되고, 저장 후 로봇에서 재생까지 앱 안에서 다 됩니다.
+      그러니 슬롯 라이브러리를 하루 전에 다 가르쳐 놓고, 무대에서는 <strong>새 구도 하나를 즉석에서 추가 교시하는
+      순간</strong>을 라이브 데모로 넣으면(그리고 바로 Jetson 판단 루프가 그걸 골라 재생하는 걸 보여주면) "직접교시"를
+      실제로 보여주면서도 SDK 제약 안에서 완전히 정직한 시연이 됩니다.</p>
+  </div>
+
+  <h3>6-1. 대안: P-Vector를 직접 계산해서 슬롯 만들기</h3>
+  <p>손교시는 사람 손 떨림이 그대로 들어가고, 재현하려면 다시 손으로 잡고 움직여야 합니다. 팬/틸트 스윕처럼
+    "정확히 몇 초에 몇 도, 얼마나 부드럽게"가 중요한 카메라 무빙은 좌표를 계산해서 <code>MotionMap.csv</code>를
+    직접 쓰는 편이 낫습니다 — 조정도 숫자만 바꾸면 되니 반복 튜닝이 훨씬 빠릅니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th style="width:90px;">필드</th><th>의미</th><th>범위 / 형식</th></tr>
+    <tr><td><code>yd</code></td><td>이 구간이 끝날 때의 목표 각도(output축 기준)</td><td>-360~360°, int16</td></tr>
+    <tr><td><code>Ltraj</code></td><td>이 구간의 궤적 길이(진행 스텝 수 → 사실상 소요 시간)</td><td>정수</td></tr>
+    <tr><td><code>s0</code> / <code>sd</code></td><td>구간 시작/종료 시 가속·감속 형태(무차원). 시작·끝 속도는 항상 0으로 묶이는 5차 다항식이라, 이 값으로 "얼마나 급하게 붙었다 떼는지"만 조절</td><td>-128~128, int8</td></tr>
+  </table>
+  </div>
+
+  <p>모션 하나(MS)는 이런 구간(MD)을 여러 개 이어 붙인 표입니다. 축마다 열이 하나씩 있고, 그 축이 이번 구간에서
+    안 움직이면 <code>-</code>로 비워둡니다.</p>
+
+  <pre><code># 예: "왼쪽으로 30도 천천히 팬" 한 구간을 pan 축에만 넣고 나머지는 정지
+def pan_sweep_keyframe(current_deg, target_deg, duration_ms, ease=10):
+    return {
+        "pan":  [target_deg, duration_ms, ease, ease],  # [yd, Ltraj, s0, sd]
+        "tilt": "-",
+        "roll": "-",
+        # ... 나머지 축도 전부 "-"
+    }
+
+# MotionMap.csv에 이어붙일 MD 행 하나를 만드는 셈 — 실제로는
+# phorce Studio가 쓰는 것과 같은 스키마(MS ID · MS NAME · MD ID · C-Vector · P-Vector×N축)를 지켜야 함
+</code></pre>
+
+  <div class="callout warn">
+    <span class="k">주의할 점</span>
+    <p>손교시는 저장 후 Studio가 <strong>다시 읽어서 검증</strong>까지 해주지만, CSV를 직접 써 넣는 경로는 그런
+      안전망이 없습니다. 잘못된 값(범위 초과, 축 개수 불일치)이 그대로 SD카드에 올라갈 수 있으니 ①
+      <code>--target sim:demo</code>로 먼저 재생해보고, ② 실물 재생 전엔 항상 Studio로 다시 열어 그래프가 정상인지
+      눈으로 확인한 뒤 재생하세요.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">7</span>접촉/이상 감지 — <code>current_a</code> / <code>dob_a</code> 기반</h2>
+  <p class="section-lede">실시간 순응은 못 하지만, "지금 뭔가에 부딪혔다"는 감지는 피드백 필드만으로 충분히 됩니다.
+    각 축의 평상시 전류·외란추정 기준선을 만들어두고, 재생 중 그 기준선을 벗어나면 이상으로 판단합니다.</p>
+
+  <pre><code># 피드백 콜백 안 — 저장만
+def on_feedback(fb):
+    for i, axis in enumerate(fb.axis):
+        if axis.valid:
+            baseline[i].update(axis.dob_a)   # 이동평균/표준편차 갱신
+            latest[i] = axis
+
+# 상태/안전 확인 타이머 안 — 실제 비교와 반응은 여기서
+def check_contact():
+    for i, axis in enumerate(latest):
+        if axis is None:
+            continue
+        if abs(axis.dob_a - baseline[i].mean) > CONTACT_SIGMA * baseline[i].std:
+            return i  # 이 축에서 이상 감지
+    return None
+
+# 슬롯 선택 직후
+contact_axis = check_contact()
+if contact_axis is not None:
+    robot.cancel_current()          # 가능하면 취소(§9 표 — E-Stop 아님, 거부될 수도 있음)
+    robot.play(slot_map["safe.retreat"])
+    kiosk.notify("접촉 감지 — 안전 동작으로 전환")
+</code></pre>
+
+  <div class="callout warn">
+    <span class="k">과잉주장 금지</span>
+    <p>이건 "임피던스 제어로 부드럽게 양보"가 아니라 "이상을 감지해서 다른 미리 정한 동작으로 갈아탄다"입니다.
+      발표에서 이 차이를 정확히 말하는 게, 안 되는 걸 된다고 했다가 질문에서 막히는 것보다 훨씬 낫습니다.</p>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">8</span>구도 선택 — "Tracking이 아니라 Framing", 그리고 AR 가이드</h2>
+  <p class="section-lede">연속적으로 피사체를 따라가는 서보잉은 애초에 참가자 API로 불가능합니다. 로봇을 움직여
+    사람을 쫓아가는 대신, <strong>구도를 먼저 정하고 사람을 그 구도로 안내</strong>하는 쪽으로 완전히 방향을
+    틉니다 — 그리고 이건 화면 두 대(iPad1·iPad2)가 이미 있어서 자연스럽게 구현됩니다.</p>
+
+  <ul>
+    <li><strong>iPad1 — 구도 고르기(선택형으로 확장):</strong> 원래는 순수 디스플레이였지만, 여기서 가벼운 터치를
+      하나 추가합니다 — 팀이 참고한 "인생샷 그리드" 레퍼런스 같은 <strong>구도 템플릿 썸네일</strong>을 몇 장
+      보여주고(또는 로봇이 상황에 맞춰 하나를 먼저 추천 — §8-2), 사용자가 마음에 드는 걸 고르면 그 템플릿이 확정됩니다.</li>
+    <li><strong>iPad2 — 실시간 AR 가이드:</strong> 확정된 템플릿의 목표 실루엣/그리드를 라이브 카메라 화면 위에
+      겹쳐 보여주고, 지금 사용자 위치와 얼마나 어긋났는지를 화살표·색상으로 안내합니다("반 발짝 왼쪽으로", 초록 =
+      정렬됨). 사용자가 스스로 위치를 맞추는 거울 역할입니다.</li>
+    <li><strong>진짜 ARKit는 안 씁니다.</strong> ARKit로 하려면 iPad에 네이티브 앱이 다시 필요해져서 §2에서 겨우
+      없앤 리스크가 되살아납니다. 대신 <strong>서버사이드 합성</strong>으로 같은 효과를 냅니다: Jetson이 C270
+      프레임에 스켈레톤·목표 그리드·정렬 화살표를 OpenCV로 그려 넣은 뒤, 그 합성 영상을 그냥 MJPEG로 iPad2
+      키오스크 페이지에 스트리밍합니다. 사용자 눈엔 "AR"처럼 보이지만 구현은 평범한 웹 스트리밍입니다.</li>
+    <li><strong>가벼운 모델은 계속, 무거운 모델은 한 번만:</strong> 스켈레톤 추정(예: 경량 pose 모델, TensorRT로
+      15~30Hz)은 인식 루프에서 매 프레임 돌려 실시간 가이드를 갱신합니다. SAM2/MobileSAM 같은 분할 모델은 훨씬
+      무거우므로 매 프레임 대신, <strong>정렬 점수가 임계값을 넘긴 순간 딱 한 번</strong>만 돌려서 "실루엣이 목표
+      영역에 깔끔히 들어왔는지, 다른 사람이 안 끼어들었는지"를 최종 확인하는 게이트로만 씁니다.</li>
+    <li><strong>판단 루프(§5)와의 연결:</strong> 정렬 점수와 이 최종 확인 통과 여부가 §5 "구도 매칭" 노드의 입력이
+      됩니다. 로봇팔은 여전히 "카테고리가 바뀔 때 한 번 스냅"하는 이산적 재구도만 하고(전신→상반신처럼), 같은
+      카테고리 안에서 사람이 조금씩 움직이는 미세 정렬은 전부 이 AR 가이드가 사람 쪽에 맡깁니다.</li>
+  </ul>
+
+  <div class="callout note">
+    <span class="k">파이프라인 요약</span>
+    <p>C270 프레임 → 스켈레톤 추정(실시간) → 선택된 템플릿과 오차 계산 → iPad2에 합성 영상 push →
+      (오차가 임계값 이내로 N프레임 유지) → SAM2/MobileSAM 1회 검증 → 통과 시 §5 판단 루프가 슬롯 재생/캡처로 진행.</p>
+  </div>
+
+  <h3>8-1. 게이트 확장 — 선택적 VLM 심사관 <span class="pill confirmed">확장 지점 확정 · 구현 후순위</span></h3>
+  <p>지금 최종 게이트(SAM2/MobileSAM)는 "실루엣이 깔끔한지, 다른 사람이 안 끼어들었는지"만 봅니다.
+    표정·전체 미학적 구도·손 위치처럼 기하학적 점수로는 안 잡히는 판단은 VLM 호출을 <strong>같은 자리에
+    하나 더</strong> 끼워 넣어서 보완합니다. 먼저 VLM 없는 로컬 검증으로 전체 기능을 완성하고, 이후 동일한
+    <code>Verifier</code> 인터페이스에 VLM을 선택적으로 연결합니다. 실시간 루프에는 절대 넣지 않고, 정렬 점수가
+    임계값을 넘긴 그 한 번의 순간에만 호출합니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>게이트</th><th>판단 범위</th><th>속도</th><th>실패/타임아웃 시</th></tr>
+    <tr><td>SAM2 / MobileSAM</td><td>실루엣 정합, 다른 사람 끼어듦</td><td>로컬, ~수백ms</td><td>재시도(다음 틱)</td></tr>
+    <tr><td>VLM <span class="pill p2">선택적 P2</span></td><td>표정, 전체 구도 미학, 어색한 자세</td><td>클라우드 API 기준 1~3s (로컬 소형 VLM이면 더 빠름)</td><td>타임아웃 시 <strong>로컬 결과만으로 진행</strong> — VLM은 보강 게이트이며 필수 경로가 아님</td></tr>
+  </table>
+  </div>
+
+  <div class="callout critical">
+    <span class="k">지켜야 할 원칙</span>
+    <p>VLM 호출은 §4의 "빠른 일과 느린 일을 같은 함수에서 하지 않기" 규칙을 그대로 적용합니다 — 절대
+      판단 루프(2Hz)나 인식 루프 안에서 매 틱 부르지 않고, 딱 이 1회성 게이트에서만. 대기 시간이 발생하는
+      동안 iPad2에 "AI가 확인 중..." 같은 즉각적인 상태 표시를 띄워서 사용자가 아무 반응 없이 뻘쭘하게
+      서 있는 상황을 만들지 않는 게 SAM2 게이트를 붙일 때보다 더 중요합니다(SAM2는 로컬이라 원래도 빠름).
+      또한 클라우드 VLM을 쓰면 §10에 이미 있는 "현장 네트워크 확보" 리스크가 하나 더 얹히므로, 채택
+      실제 API 활성화 시점은 그 결정과 묶어서 판단해야 합니다. API를 붙이기 전에는 성공·거절·타임아웃
+      응답을 fake로 준비해 상태 전이만 먼저 검증합니다.</p>
+  </div>
+
+  <h3>8-2. 첫 감지 시점 — VLM 구도 추천 멘트 <span class="pill confirmed">확장 지점 확정 · 구현 후순위</span></h3>
+  <p>지금 iPad1의 템플릿 추천은 규칙 기반(포즈/제품 유무 매칭)입니다. §8-1과 같은 패턴으로, §5 "사람 탐지"
+    노드에서 사람이 <strong>처음</strong> 잡히는 순간 딱 한 번 VLM에 프레임을 보여줘서 템플릿 추천과 함께
+    짧은 자연어 멘트("어울리는 소품이네요, 제품 클로즈업 어때요?")를 같이 생성해 iPad1에 띄웁니다. 규칙
+    기반 매칭을 먼저 완성해 전체 흐름이 VLM 없이도 굴러가게 해두고, 이후 같은 자리에 VLM을 선택적으로
+    연결하는 순서는 §8-1과 동일합니다 — 사용자는 추천을 그대로 안 따라도 되고 다른 템플릿으로 바꿀 수
+    있는 선택권은 그대로 유지합니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>1회성 VLM 호출 지점</th><th>트리거</th><th>지연 여유</th><th>실패/타임아웃 시</th></tr>
+    <tr><td>§8-1 게이트</td><td>정렬 점수 임계값 통과(촬영 임박)</td><td>짧음 — "AI가 확인 중..." 표시 필수</td><td>로컬 SAM2 결과만으로 진행</td></tr>
+    <tr><td>§8-2 추천 멘트</td><td>사람 최초 감지(막 다가온 직후)</td><td>넉넉함 — "어울리는 구도 찾는 중..." 정도의 로딩감으로 자연스럽게 흡수됨</td><td>기존 규칙 기반 템플릿 매칭으로 폴백</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">9</span>개발 우선순위</h2>
+  <p class="section-lede">실제로 되는 것 기준으로 다시 짠 우선순위입니다. P0는 데모가 아예 안 되면 없는 것,
+    P1은 있으면 훨씬 좋아지는 것, P2는 시간이 남으면.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th style="width:64px;">우선순위</th><th>모듈</th><th>내용</th></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>피드백 리스너</td><td><code>qos_profile_sensor_data</code> 구독, <code>valid</code> 체크, 최신값 저장</td></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>모션 슬롯 5~6개 교시</td><td>phorce Studio로 home/전신/상반신/제품/안전 최소셋 사전 녹화</td></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>오케스트레이터 뼈대</td><td>이벤트 상태 머신 + <code>play()</code> 호출 + MotionBusy/Rejected 예외 처리</td></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>인식 루프 — 스켈레톤</td><td>C270 → 경량 pose 모델(15~30Hz)로 키포인트, 사람 존재 + 대략적 포즈 분류</td></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>엔드이펙터 폰 캡처</td><td>HTTP 셔터 트리거 왕복 확인 (오늘 안에 기종 결정 — §11 트랙 C)</td></tr>
+    <tr><td><span class="pill p0">P0</span></td><td>키오스크 웹서버 뼈대</td><td>FastAPI + 정적 페이지, iPad Safari 풀스크린 연결 확인(네트워크 리스크 조기 발견)</td></tr>
+    <tr><td><span class="pill p1">P1</span></td><td>구도 템플릿 매칭</td><td>키포인트 대 목표 존 점수화, 카테고리 전환 로직(§5 판단 루프에 연결)</td></tr>
+    <tr><td><span class="pill p1">P1</span></td><td>AR 가이드 오버레이</td><td>OpenCV로 스켈레톤+목표그리드+정렬화살표 합성 → iPad2에 MJPEG 스트리밍</td></tr>
+    <tr><td><span class="pill p1">P1</span></td><td>iPad1 템플릿 선택 UI</td><td>썸네일 몇 장 + 터치 선택 → 키오스크 서버에 POST</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>SAM2/MobileSAM 최종 검증</td><td>정렬 임계값 통과 시 1회 분할로 실루엣·끼어듦 확인</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>접촉 이상 감지</td><td><code>dob_a</code> 기준선 + 임계값 + 안전 슬롯 전환 — 뒤로 미룸(팀 확인)</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>라이브 즉석 교시 데모</td><td>무대에서 새 프리셋 교시 → 바로 판단 루프가 인식</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>슬롯 10개 이상 확장</td><td>좌우 팬, 접근/후퇴 등 세분화(§6-1 P-Vector 직접 생성 활용)</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>이동 베이스·ASAP 잔차 등</td><td>실물 미구현 — 컨셉 영상/Isaac Sim으로만 제시</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>선택적 VLM 최종 게이트(§8-1)</td><td>로컬 전체 흐름 완성 후 같은 Verifier 인터페이스에 표정·구도 미학 판단 추가</td></tr>
+    <tr><td><span class="pill p2">P2</span></td><td>선택적 VLM 추천 멘트(§8-2)</td><td>사람 최초 감지 시 규칙 기반 템플릿 매칭 위에 추천 템플릿 + 자연어 멘트 선택적으로 연결</td></tr>
+    <tr><td><span class="pill proposed">제안</span></td><td>음성 입력(§12)</td><td>C270 마이크 웨이크워드 + STT/LLM 대화형 안내 — 4개 트랙 밖, 채택 여부 팀 확인 필요</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">10</span>남은 결정 — 이번 주 안에 확인 필요</h2>
+  <div class="table-scroll">
+  <table>
+    <tr><th>항목</th><th>왜 지금 정해야 하나</th></tr>
+    <tr><td><strong>엔드이펙터 폰 기종</strong> (아이폰 희망 확인)</td><td>아이폰은 헤드리스 원격 셔터가 안드로이드+IP Webcam만큼 간단하지 않음. §11 트랙 C에서 오늘 짧게 검증 후 확정 — 커스텀 미니 앱 vs Pushcut 웹훅 브릿지 둘 다 시도해보고, 둘 다 안정적이지 않으면 이 장치만 안드로이드로 교체(iPad 2대는 그대로).</td></tr>
+    <tr><td>Jetson·iPad·폰이 같은 네트워크에 있는지</td><td>키오스크 웹서버·HTTP 셔터 둘 다 로컬 Wi-Fi 전제. 현장 네트워크(핫스팟/공유기) 확보가 선행 조건 — §11 트랙 D에서 오늘 확인.</td></tr>
+    <tr><td>제품 인식 범위</td><td>"제품을 들었다"를 어떻게 판단할지 — 손 키포인트 근접도로 단순화할지, 별도 객체 탐지를 붙일지에 따라 인식 루프 작업량이 달라짐. §8 파이프라인이 자리잡은 뒤 결정해도 늦지 않음.</td></tr>
+    <tr><td>음성 입력(§12) 채택 여부</td><td>클라우드 API 의존(네트워크 리스크 가중)과 새 컴포넌트 추가 비용이 있어서, A/C/D 안정화 이후 시간이 남는지 보고 팀이 착수 여부·시점을 정해야 함. VLM(§8-1 게이트·§8-2 추천 멘트)은 선택적 확장 지점과 실패 정책까지 확정됐고 실제 API 활성화 시점만 후순위로 둠.</td></tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no">11</span>지금 할 일 — 4개 트랙 병렬</h2>
+  <p class="section-lede">물리 구성이 정리됐으니, 서로 거의 안 겹치는 4개 트랙으로 나눠서 오늘부터 바로 시작할 수
+    있습니다. 트랙 A가 제일 먼저 되어야 나머지가 실물에서 의미가 생기니 우선순위를 둔다면 A → C → D → B 순이지만,
+    사람이 나뉘어 있으면 넷 다 동시에 시작해도 됩니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th style="width:150px;">트랙</th><th>지금 하는 일</th><th>끝나면 확인되는 것</th></tr>
+    <tr>
+      <td><strong>A. 로봇 최소 왕복</strong></td>
+      <td>phorce Studio로 슬롯 3~4개(home/전신/상반신/안전) 교시 → <code>phorce doctor</code> →
+        <code>--target sim:demo</code>로 <code>play()</code> 왕복 → 실물로 같은 걸 반복</td>
+      <td>영점·부팅자세·모션 슬롯 파이프라인이 실제로 도는지. 이게 안 되면 나머지는 다 의미 없음(P0 게이트).</td>
+    </tr>
+    <tr>
+      <td><strong>B. 스켈레톤 인식</strong></td>
+      <td>로봇 없이 C270 + 노트북만으로 시작 가능. 경량 pose 모델(TensorRT 없이도 우선 OpenCV/MediaPipe로)로
+        키포인트 뽑고, 구도 템플릿 1개에 대한 정렬 점수 계산까지</td>
+      <td>§8 파이프라인의 핵심 로직. 로봇·iPad 없이도 통째로 선행 개발 가능한 트랙.</td>
+    </tr>
+    <tr>
+      <td><strong>C. 엔드이펙터 폰 셔터</strong></td>
+      <td>아이폰 커스텀 미니 앱(AVFoundation + 임베디드 HTTP서버)과 Pushcut 웹훅 브릿지, 둘 다 30분~1시간씩
+        찔러보고 더 안정적인 쪽 선택. 둘 다 애매하면 즉시 안드로이드+IP Webcam으로 전환</td>
+      <td>§10의 "이번 주 안에 확인" 항목 중 가장 일정 리스크가 큰 것 — 오늘 안에 닫아야 뒷일정이 안전함.</td>
+    </tr>
+    <tr>
+      <td><strong>D. 키오스크 뼈대</strong></td>
+      <td>FastAPI(또는 Flask)로 페이지 하나 띄우고, 두 iPad를 같은 Wi-Fi에 붙여 Safari 풀스크린(가이드 접근
+        모드)으로 그 페이지가 뜨는지만 확인</td>
+      <td>현장 네트워크·기기 조합에서 실제로 막히는 지점이 있는지 조기 발견. 이후 B·C의 결과물을 여기 페이지에
+        꽂기만 하면 됨.</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="no alt">12</span>음성 입력 제안 — C270 마이크 + iPad 스피커 <span class="pill proposed">제안 · 미확정, 4개 트랙 밖</span></h2>
+  <p class="section-lede">C270에 마이크가 내장돼 있어서, 음성으로 맥락을 듣고 iPad 스피커로 반응하는 레이어를
+    얹으면 키오스크 UX가 더 편해질 수 있습니다. 단, §4의 "빠른 일과 느린 일을 섞지 않기" 원칙을 어기면
+    사용자가 아무 반응 없이 서서 기다리는 최악의 경험이 나오므로, 처음부터 두 경로로 나눠서 설계합니다.</p>
+
+  <div class="table-scroll">
+  <table>
+    <tr><th>경로</th><th>하는 일</th><th>속도</th><th>쓰는 곳</th></tr>
+    <tr><td><strong>빠른 경로(로컬)</strong></td><td>"사진"·"치즈"·"찍어줘" 같은 트리거 워드만 잡는 경량 wake-word/키워드 스팟팅</td><td>&lt;300ms, 로컬</td><td>§5 판단 루프의 보조 트리거 신호(주 트리거는 여전히 정렬 점수)</td></tr>
+    <tr><td><strong>느린 경로(맥락 이해)</strong></td><td>STT + LLM으로 문장 단위 의도 파악(예: "셋이 제품 들고 찍고 싶어요")</td><td>1~3s, 클라우드 또는 로컬 STT</td><td>iPad1 대기/설정 단계 — 구도 템플릿 추천, 대화형 안내</td></tr>
+  </table>
+  </div>
+
+  <div class="callout critical">
+    <span class="k">뻘쭘한 정적 방지 원칙</span>
+    <p>STT/LLM 지연을 <strong>셔터 타이밍의 임계 경로에 절대 넣지 않습니다.</strong> 실제 촬영 트리거는
+      지금처럼 §8의 정렬 점수(로컬·즉각)가 주도하고, 음성은 보조 신호로만 씁니다. 느린 경로는 촬영 직전이
+      아니라 <strong>설정/대기 단계</strong>에서만 돌려서, 지연이 있어도 사용자가 "다음 액션을 기다리는 중"이
+      아니라 "대화 중"인 상태가 되게 합니다. 그리고 뭔가 들었으면 처리 결과가 나오기 전에 먼저 짧은 인지
+      신호(iPad 스피커로 "삐" 소리나 "들었어요")부터 즉시 주고, 실제 응답은 비동기로 처리합니다 — D트랙의
+      기존 SSE/WebSocket 상태 push 채널에 오디오 상태(listening/processing/ready)만 얹으면 됩니다.</p>
+  </div>
+
+  <p><strong>리스크:</strong> 해커톤 부스 현장은 주변 소음이 심할 가능성이 높아 마이크 인식 신뢰도가
+    §11 트랙 C(폰 셔터)만큼 리스크가 클 수 있습니다. 또한 C270 마이크 캡처는 B트랙의 영상 캡처와 별도
+    스레드/프로세스로 붙어야 하는 새 컴포넌트라, 채택한다면 A/C/D가 먼저 안정화된 뒤 P2로 붙이는 걸
+    권장합니다 — 지금 4개 트랙(§11)에는 아직 포함하지 않았습니다.</p>
+</section>
+
+</div>
+<div class="wrap">
+<p class="foot">GeekSeek · phorce 해커톤 · 2026-08-06 · 근거 문서: 01-quickstart, 02-tutorial, 03-manual, phorce-studio-hackathon-manual, pcm-board-guide, 해커톤_추가공지_p_vector</p>
+</div>
+</div>

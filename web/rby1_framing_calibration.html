@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RBY1 Skeleton Range Capture</title>
+<style>
+  :root { color-scheme: dark; font-family: Inter, Pretendard, system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100svh; background: #090c13; color: #f4f6ff; }
+  .shell { width: min(1500px, 100%); margin: auto; padding: 22px; }
+  header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+  h1 { margin: 0; font-size: clamp(1.35rem, 2.3vw, 2.2rem); }
+  .sub { margin: 6px 0 0; color: #929db5; }
+  .chip { padding: 9px 14px; border-radius: 999px; background: #252c3e; color: #ffcf72; font-weight: 800; }
+  .chip.ok { color: #83edb4; background: #16392e; }
+  main { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(310px, .55fr); gap: 18px; }
+  .card { overflow: hidden; border: 1px solid #252c3c; border-radius: 24px; background: #141925; box-shadow: 0 24px 70px #0008; }
+  .previews { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: #293044; }
+  .preview { position: relative; aspect-ratio: 4/3; background: #04060a; }
+  .preview img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .tag { position: absolute; left: 13px; top: 13px; padding: 7px 10px; border-radius: 999px; background: #080b12d9; font-size: .78rem; font-weight: 850; }
+  .toolbar { display: flex; align-items: center; gap: 12px; padding: 15px; }
+  .modes { display: flex; padding: 5px; border-radius: 15px; background: #0c1018; }
+  button, .download { min-height: 46px; border: 0; border-radius: 14px; padding: 0 18px; background: #2b3348; color: #f7f8ff; font: inherit; font-weight: 850; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+  .mode { min-height: 38px; color: #909bb4; background: transparent; }
+  .mode.active { color: white; background: #3a445e; }
+  #capture { flex: 1; min-height: 58px; background: linear-gradient(135deg, #6678ff, #9e52dc); font-size: 1.03rem; }
+  button:disabled { opacity: .4; cursor: wait; }
+  .message { min-height: 48px; padding: 0 18px 18px; color: #9ca7be; }
+  .message.ok { color: #82ecb3; }
+  .message.error { color: #ff929e; }
+  aside { padding: 20px; }
+  .counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; }
+  .count { padding: 13px 8px; border-radius: 15px; background: #0d111a; text-align: center; color: #98a2b8; }
+  .count strong { display: block; margin-top: 4px; color: white; font-size: 1.8rem; }
+  h2 { margin: 22px 0 10px; font-size: 1rem; color: #aeb7cb; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  th, td { padding: 10px 4px; border-bottom: 1px solid #293044; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .note { margin-top: 18px; padding: 14px; border-radius: 15px; background: #0d111a; color: #9ba6bd; line-height: 1.55; }
+  kbd { padding: 3px 8px; border: 1px solid #75809a; border-bottom-width: 3px; border-radius: 7px; }
+  @media (max-width: 950px) { main { grid-template-columns: 1fr; } }
+  @media (max-width: 650px) { .shell { padding: 11px; } header { align-items: flex-start; flex-direction: column; } .previews { grid-template-columns: 1fr; } .toolbar { align-items: stretch; flex-direction: column; } #capture { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header>
+    <div><h1>Skeleton 기준 데이터 수집</h1><p class="sub">전신/상반신 라벨을 고르고 모델이 선 상태에서 Space를 누르세요.</p></div>
+    <div id="detector" class="chip">Skeleton 연결 중</div>
+  </header>
+  <main>
+    <section class="card">
+      <div class="previews">
+        <div class="preview"><img id="rgb" alt="RGB 원본" /><span class="tag">RGB 원본 · 저장됨</span></div>
+        <div class="preview"><img id="skeleton" alt="Skeleton 결과" /><span class="tag">Skeleton 검출 · 저장됨</span></div>
+      </div>
+      <div class="toolbar">
+        <div class="modes" aria-label="데이터 라벨">
+          <button class="mode active" data-label="full_body">전신</button>
+          <button class="mode" data-label="upper_body">상반신</button>
+        </div>
+        <button id="capture"><kbd>Space</kbd>&nbsp; 현재 RGB + Skeleton 좌표 저장</button>
+        <a id="download" class="download" href="/framing-samples/framing_samples.csv" download>CSV</a>
+      </div>
+      <div id="message" class="message">사람 한 명의 어깨와 골반이 모두 보이면 저장할 수 있습니다.</div>
+    </section>
+    <aside class="card">
+      <div class="counts">
+        <div class="count">전체<strong id="total">0</strong></div>
+        <div class="count">전신<strong id="fullCount">0</strong></div>
+        <div class="count">상반신<strong id="upperCount">0</strong></div>
+      </div>
+      <h2>현재 정규화 좌표</h2>
+      <table>
+        <thead><tr><th>관절</th><th>x</th><th>y</th><th>신뢰도</th></tr></thead>
+        <tbody id="joints"></tbody>
+      </table>
+      <div id="directory" class="note">저장 폴더를 확인하는 중…</div>
+    </aside>
+  </main>
+</div>
+<script>
+  const $ = (selector) => document.querySelector(selector);
+  const names = {11:"왼쪽 어깨", 12:"오른쪽 어깨", 23:"왼쪽 골반", 24:"오른쪽 골반"};
+  let label = "full_body", busy = false, canCapture = false;
+  let rgbLoading = false, skeletonLoading = false;
+
+  function setImage(element, blob) {
+    const url = URL.createObjectURL(blob), previous = element.dataset.url;
+    element.src = url; element.dataset.url = url;
+    if (previous) URL.revokeObjectURL(previous);
+  }
+  function show(text, kind="") { $("#message").textContent = text; $("#message").className = `message ${kind}`; }
+  async function detail(response) { try { return (await response.json()).detail; } catch { return `HTTP ${response.status}`; } }
+  function updateButton() { $("#capture").disabled = busy || !canCapture; }
+
+  async function refreshStatus() {
+    try {
+      const response = await fetch(`/api/framing-calibration/status?label=${label}`, {cache:"no-store"});
+      if (!response.ok) throw new Error(await detail(response));
+      const data = await response.json(), pose = data.pose, session = data.session;
+      const points = new Map((pose.landmarks || []).map(item => [item.index, item]));
+      canCapture = pose.people_count === 1 && Object.keys(names).every(index => points.has(Number(index)));
+      $("#detector").textContent = canCapture ? "1명 · 기준 관절 검출됨" : `${pose.people_count || 0}명 · 자세를 확인하세요`;
+      $("#detector").className = `chip ${canCapture ? "ok" : ""}`;
+      $("#joints").innerHTML = Object.entries(names).map(([index, name]) => {
+        const point = points.get(Number(index));
+        return `<tr><td>${name}</td><td>${point ? point.x.toFixed(4) : "-"}</td><td>${point ? point.y.toFixed(4) : "-"}</td><td>${point ? point.visibility.toFixed(3) : "-"}</td></tr>`;
+      }).join("");
+      $("#total").textContent = session.count;
+      $("#fullCount").textContent = session.full_body_count;
+      $("#upperCount").textContent = session.upper_body_count;
+      $("#directory").textContent = `저장 폴더\n${session.directory}`;
+      updateButton();
+    } catch (error) {
+      canCapture = false; updateButton();
+      $("#detector").textContent = "Skeleton 연결 오류";
+      $("#detector").className = "chip";
+      if (!busy) show(error.message, "error");
+    }
+  }
+
+  async function refreshImage(kind) {
+    const isRgb = kind === "rgb";
+    if ((isRgb && rgbLoading) || (!isRgb && skeletonLoading)) return;
+    if (isRgb) rgbLoading = true; else skeletonLoading = true;
+    try {
+      const path = isRgb ? "/api/rgb-frame" : `/api/framing-frame/${label}`;
+      const response = await fetch(`${path}?t=${Date.now()}`, {cache:"no-store"});
+      if (response.ok) setImage(isRgb ? $("#rgb") : $("#skeleton"), await response.blob());
+    } finally { if (isRgb) rgbLoading = false; else skeletonLoading = false; }
+  }
+
+  async function capture() {
+    if (busy || !canCapture) return;
+    busy = true; updateButton(); show(`${label === "full_body" ? "전신" : "상반신"} 샘플 저장 중…`);
+    try {
+      const response = await fetch(`/api/framing-calibration/capture?label=${label}`, {method:"POST"});
+      if (!response.ok) throw new Error(await detail(response));
+      const data = await response.json();
+      show(`${data.sample.sample_id} 저장 완료 · RGB + Skeleton + CSV`, "ok");
+      await refreshStatus();
+    } catch (error) { show(error.message, "error"); }
+    finally { busy = false; updateButton(); }
+  }
+
+  document.querySelectorAll(".mode").forEach(button => button.addEventListener("click", () => {
+    label = button.dataset.label;
+    document.querySelectorAll(".mode").forEach(item => item.classList.toggle("active", item === button));
+    canCapture = false; updateButton(); refreshStatus(); refreshImage("skeleton");
+  }));
+  $("#capture").onclick = capture;
+  document.addEventListener("keydown", event => {
+    if (event.code === "Space" && !event.repeat) { event.preventDefault(); capture(); }
+  });
+  updateButton(); refreshStatus(); refreshImage("rgb"); refreshImage("skeleton");
+  setInterval(refreshStatus, 300);
+  setInterval(() => refreshImage("rgb"), 180);
+  setInterval(() => refreshImage("skeleton"), 220);
+</script>
+</body>
+</html>

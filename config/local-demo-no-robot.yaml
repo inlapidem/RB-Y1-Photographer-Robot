@@ -1,0 +1,28 @@
+# local-demo.yaml과 동일하지만 robot: fake — RViz/ROS 없이도 웹캠 접근/정위치
+# 감지 + iPad UI(1~4단계, guiding까지)를 실시간으로 검증할 때 씀.
+# 5단계(capturing)에 들어가면 로봇은 그냥 sleep만 하고 실제로 움직이지 않음.
+runtime:
+  robot: fake
+  capture: webapp
+  move_seconds: 1.2
+  capture_seconds: 0.2
+  person_sensor: mediapipe
+  camera_index: 0
+  camera_fps: 15.0
+  camera_width: 1280
+  camera_height: 960
+  camera_fourcc: MJPG
+  framing_dataset_dir: calibration/webcam_skeleton_1280x960
+  debug_window: true
+
+  # 손님용 사진 페이지 (QR). Tailscale Funnel이 아래 로컬 포트를 진짜 인증서가
+  # 붙은 공개 주소로 내보낸다:  sudo tailscale funnel --bg 8080
+  # 비워두면 갤러리도 QR도 뜨지 않는다.
+  gallery_base_url: "https://phorce.<your-tailnet>.ts.net"
+  gallery_port: 8080
+
+web:
+  host: 0.0.0.0
+  port: 8443
+  ssl_keyfile: certs/key.pem
+  ssl_certfile: certs/cert.pem

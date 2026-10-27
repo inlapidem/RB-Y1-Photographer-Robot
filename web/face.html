@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko" data-page="face">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Geekseek 구도 선택</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="kiosk face-page">
+    <header><span class="brand">GEEKSEEK</span><span id="connection" class="connection">연결 중</span></header>
+    <section class="hero">
+      <p class="eyebrow">AI CAMERA ROBOT</p>
+      <h1 id="headline">어떤 사진을 찍어볼까요?</h1>
+      <p id="message">원하는 구도를 선택해 주세요.</p>
+    </section>
+    <section class="template-grid">
+      <button data-template="full_body"><span class="template-icon">全</span><strong>전신</strong><small>머리부터 발끝까지</small></button>
+      <button data-template="upper_body"><span class="template-icon">半</span><strong>상반신</strong><small>인물 중심의 안정적인 구도</small></button>
+      <button data-template="product_closeup"><span class="template-icon">物</span><strong>제품 클로즈업</strong><small>손에 든 제품을 강조</small></button>
+    </section>
+    <footer>촬영 상태 <code id="state">booting</code></footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

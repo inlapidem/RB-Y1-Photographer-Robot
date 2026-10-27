@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko" data-page="face">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Geekseek iPad 1 · Face Mock</title>
+  <link rel="stylesheet" href="/static/mock.css">
+</head>
+<body>
+  <main class="kiosk mock-kiosk face-mock">
+    <header class="mock-header">
+      <span class="brand">GEEKSEEK</span>
+      <span class="stage-chip"><i></i><b id="stage-label">SCENE 01</b></span>
+    </header>
+
+    <section class="face-stage" aria-live="polite">
+      <div id="face" class="robot-face mood-gentle" role="img" aria-label="상냥한 눈 표정">
+        <div class="face-glow"></div>
+        <div class="eye eye-left">
+          <span class="lid"></span><span class="pupil"></span><span class="sparkle sparkle-a"></span><span class="sparkle sparkle-b"></span>
+        </div>
+        <div class="eye eye-right">
+          <span class="lid"></span><span class="pupil"></span><span class="sparkle sparkle-a"></span><span class="sparkle sparkle-b"></span>
+        </div>
+        <span class="excitement excitement-a"></span>
+        <span class="excitement excitement-b"></span>
+        <span class="excitement excitement-c"></span>
+      </div>
+      <p id="face-note" class="face-note">반가워요</p>
+    </section>
+
+    <section class="subtitle-card">
+      <span class="voice-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <p id="caption">안녕하세요! 사진 한 장 찍고 가세요.</p>
+    </section>
+
+    <footer class="mock-footer">
+      <span id="stage-title">사람을 기다리는 중</span>
+      <button id="speech-toggle" class="stage-chip" type="button" aria-pressed="false" aria-label="음소거" title="음소거" style="cursor: pointer">
+        <span id="speech-icon" aria-hidden="true">🔊</span><b id="speech-label">음성 켜짐</b>
+      </button>
+      <nav class="mock-controls" aria-label="개발용 단계 제어">
+        <button id="next-stage" class="control-primary" type="button" disabled>자동 진행 대기 중 <span>·</span></button>
+      </nav>
+    </footer>
+  </main>
+  <script src="/static/mock.js"></script>
+</body>
+</html>

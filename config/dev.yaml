@@ -1,0 +1,16 @@
+runtime:
+  robot: fake
+  capture: fake
+  move_seconds: 0.05
+  capture_seconds: 0.05
+  person_sensor: fake
+  camera_index: 0
+  camera_fps: 15.0
+  camera_width: 1280
+  camera_height: 960
+  camera_fourcc: MJPG
+  framing_dataset_dir: calibration/webcam_skeleton_1280x960
+
+web:
+  host: 0.0.0.0
+  port: 8000

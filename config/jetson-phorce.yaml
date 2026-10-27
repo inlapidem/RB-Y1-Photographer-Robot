@@ -1,0 +1,51 @@
+# local-demo-no-robot.yaml과 같은 구성에서 로봇만 실물(phorce)로 바꾼 것.
+# 웹캠 인식·iPad UI·촬영용 폰·갤러리는 전부 동일하게 동작하고, 5단계(capturing)에서
+# 팔이 실제로 28초 움직인다.
+#
+# move_seconds / capture_seconds는 fake·rviz 로봇 전용이라 여기서는 뺐다.
+runtime:
+  robot: phorce
+  capture: webapp
+  person_sensor: mediapipe
+  camera_index: 0
+  camera_fps: 15.0
+  camera_width: 1280
+  camera_height: 960
+  camera_fourcc: MJPG
+  framing_dataset_dir: calibration/webcam_skeleton_1280x960
+  debug_window: true
+
+  # 구도 → SD카드 슬롯. 슬롯 파일은 scripts/build_motion_slots.py가 만들고,
+  # 같은 이름의 .schedule.json이 셔터 타이밍을 담는다. `phorce list`로 실제
+  # 적재 여부를 확인하고 번호를 맞출 것.
+  phorce_motion_ids:
+    frame.full_body: 4
+    frame.upper_body: 5
+  phorce_slot_dir: calibration/slots
+
+  # 슬롯 하나는 28초다. phorce의 기본 대기 시간이 정확히 30초라 여기에 30을
+  # 주면 물리적으로는 완주하고도 결과가 timeout으로 떨어진다 — 여유를 둔다.
+  phorce_timeout_seconds: 45.0
+  phorce_busy_retries: 2
+  phorce_busy_retry_seconds: 1.0
+
+  # 한 번의 sweep에서 찍을 목표 장수. 웨이포인트 보장샷이 먼저 배정되고
+  # 남는 예산이 정지 구간 → 이동 구간 순으로 채워진다(최대 2Hz).
+  photo_target_count: 40
+
+  # 미리보기는 가이드 화면이 사진 하나당 0.288초씩 넘긴다. 40장이면 고정 3초로는
+  # 8장밖에 못 보고 "마음에 드시나요?"로 넘어가므로, 장수에 맞춰 늘린다.
+  # (fake 로봇은 3장이라 이 값이 필요 없어서 no-robot 설정에는 없다.)
+  slide_seconds: 0.288
+
+  # 손님용 사진 페이지 (QR). Tailscale Funnel이 아래 로컬 포트를 진짜 인증서가
+  # 붙은 공개 주소로 내보낸다:  sudo tailscale funnel --bg 8080
+  # 비워두면 갤러리도 QR도 뜨지 않는다.
+  gallery_base_url: "https://phorce.<your-tailnet>.ts.net"
+  gallery_port: 8080
+
+web:
+  host: 0.0.0.0
+  port: 8443
+  ssl_keyfile: certs/key.pem
+  ssl_certfile: certs/cert.pem

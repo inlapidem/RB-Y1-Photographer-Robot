@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>로봇 자세 캡처</title>
+<style>
+  :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+  body { max-width: 1100px; margin: 0 auto; padding: 24px; background: #10131a; color: #eef2ff; }
+  h1 { margin-bottom: 8px; }
+  .hint { color: #b7c0d8; }
+  #status { margin: 20px 0; padding: 14px 16px; border-radius: 10px; background: #20283a; }
+  #status.error { background: #5c2228; }
+  #status.ok { background: #174c35; }
+  kbd { padding: 4px 10px; border: 1px solid #8791a9; border-bottom-width: 3px; border-radius: 6px; }
+  .result { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(340px, 1fr); gap: 24px; }
+  img { width: 100%; border-radius: 12px; background: #050608; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 9px; border-bottom: 1px solid #394158; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  @media (max-width: 760px) { .result { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <h1>로봇 자세 + 휴대폰 프레임 캡처</h1>
+  <p class="hint">팔을 원하는 자세에서 멈춘 뒤 <kbd>Space</kbd>를 누르세요.</p>
+  <div id="status">피드백과 휴대폰 연결 상태를 확인하는 중…</div>
+  <div class="result">
+    <img id="photo" alt="캡처 결과" />
+    <div>
+      <table>
+        <thead><tr><th>축</th><th>각도 (deg)</th><th>속도 (deg/s)</th><th>캡처 중 변화</th></tr></thead>
+        <tbody id="axes"></tbody>
+      </table>
+      <p id="filename" class="hint"></p>
+    </div>
+  </div>
+<script>
+  const statusEl = document.getElementById("status");
+  const photoEl = document.getElementById("photo");
+  const axesEl = document.getElementById("axes");
+  const filenameEl = document.getElementById("filename");
+  let capturing = false;
+
+  function setStatus(message, kind = "") {
+    statusEl.textContent = message;
+    statusEl.className = kind;
+  }
+
+  async function refreshStatus() {
+    try {
+      const response = await fetch("/api/status", { cache: "no-store" });
+      const data = await response.json();
+      const feedback = data.feedback_ready ? "로봇 피드백 연결됨" : "로봇 피드백 없음";
+      const phone = data.phone_connected ? "휴대폰 연결됨" : "휴대폰 연결 안 됨";
+      if (!capturing) setStatus(`${feedback} · ${phone}`);
+    } catch (error) {
+      if (!capturing) setStatus("서버 상태를 읽지 못했습니다", "error");
+    }
+  }
+
+  async function capture() {
+    if (capturing) return;
+    capturing = true;
+    setStatus("각도와 휴대폰 프레임을 캡처하는 중…");
+    try {
+      const response = await fetch("/api/capture", { method: "POST" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || "캡처 실패");
+
+      const trigger = data.feedback_at_trigger;
+      axesEl.innerHTML = trigger.axis_indices.map((axis, index) => `
+        <tr><td>axis[${axis}]</td><td>${trigger.position_deg[index].toFixed(3)}</td>
+        <td>${trigger.velocity_deg_s[index].toFixed(3)}</td>
+        <td>${(data.movement_during_capture_deg[index] ?? 0).toFixed(3)}°</td></tr>
+      `).join("");
+      photoEl.src = `${data.image_url}?t=${Date.now()}`;
+      filenameEl.textContent = `저장: ${data.image} / ${data.metadata}`;
+      setStatus("저장 완료 — 다음 자세에서 Space를 누르세요", "ok");
+    } catch (error) {
+      setStatus(error.message, "error");
+    } finally {
+      capturing = false;
+    }
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.code !== "Space" || event.repeat) return;
+    event.preventDefault();
+    capture();
+  });
+  refreshStatus();
+  setInterval(refreshStatus, 1500);
+</script>
+</body>
+</html>

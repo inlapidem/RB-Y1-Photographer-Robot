@@ -1,0 +1,39 @@
+runtime:
+  robot: rby1
+  rby1_address: "192.168.30.1:50051"
+  rby1_model: a
+  rby1_command_priority: 1
+  rby1_speed_ratio: 0.70
+  rby1_acceleration_ratio: 0.50
+  rby1_min_travel_seconds: 0.25
+  rby1_moving_shot_interval: 0.35
+  rby1_trajectories:
+    frame.full_body: calibration/rby1/frame.full_body.json
+    frame.upper_body: calibration/rby1/frame.upper_body.json
+
+  capture: webapp
+  person_sensor: mediapipe
+  camera_name: Nuroum V11
+  camera_index: 0  # camera_name을 찾지 않을 때만 쓰는 하위 호환 기본값
+  camera_fps: 5.0
+  camera_device_fps: 30.0
+  camera_width: 640
+  camera_height: 480
+  camera_fourcc: MJPG
+  framing_dataset_dir: calibration/webcam_skeleton_1280x960
+  framing_samples_csv: calibration/rby1/framing_samples/session_20260817_042728/framing_samples.csv
+  framing_radius_scale: 2.0
+  photo_target_count: 30
+  slide_seconds: 0.30
+  gesture_hold_seconds: 1.0
+  asking_seconds: 30.0
+  gallery_base_url: https://tegra-ubuntu.<your-tailnet>.ts.net
+  gallery_port: 8080
+
+web:
+  host: 0.0.0.0
+  # Public Funnel owns the Tailscale-side :8443 listener. Keep the local
+  # backend separate so binding 0.0.0.0 cannot collide with it.
+  port: 8444
+  ssl_keyfile: certs/key.pem
+  ssl_certfile: certs/cert.pem

@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko" data-page="guide">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Geekseek 촬영 가이드</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <main class="kiosk guide-page">
+    <header><span class="brand">GEEKSEEK</span><span id="connection" class="connection">연결 중</span></header>
+    <section class="guide-copy">
+      <p class="eyebrow">LIVE GUIDE</p>
+      <h1 id="headline">구도를 선택해 주세요</h1>
+      <p id="message">상단 iPad에서 촬영 구도를 골라주세요.</p>
+    </section>
+    <section class="viewfinder">
+      <div class="thirds"><i></i><i></i><i></i><i></i></div>
+      <div class="silhouette"><span></span></div>
+      <img id="photo" alt="촬영 결과">
+      <span id="viewfinder-label">CAMERA PREVIEW PLACEHOLDER</span>
+    </section>
+    <section class="actions">
+      <button id="align" class="primary">개발용: 정렬 완료</button>
+      <button id="retake">다시 찍기</button>
+      <button id="accept" class="primary">이 사진 선택</button>
+    </section>
+    <footer>촬영 상태 <code id="state">booting</code></footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

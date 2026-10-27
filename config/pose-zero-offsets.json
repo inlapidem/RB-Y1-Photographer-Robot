@@ -1,0 +1,6 @@
+{
+  "source_sample": "studio_zero_20260808_063624",
+  "description": "Studio zero pose measured in safe_op at 2026-08-08 06:36:24 KST",
+  "axis_indices": [0, 1, 2, 6, 8],
+  "position_rad": [2.524, 0.5, -0.716, -0.836, 0.694]
+}
