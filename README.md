@@ -28,14 +28,6 @@ and sweeps a phone held in the RB-Y1's right gripper through taught poses to sho
 
 </div>
 
-<br>
-
-| **Sessions** | **Photos** | **Failed captures** | **Shots / guest** | **Taught keyposes** |
-|:---:|:---:|:---:|:---:|:---:|
-| **27** | **810** | **0** | **30** | **11 full-body · 10 upper-body** |
-
-<sub>Counted from the photos saved on the robot over two days of rehearsal and the event.</sub>
-
 ---
 
 ## Demo
