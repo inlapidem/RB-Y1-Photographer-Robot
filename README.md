@@ -2,11 +2,26 @@
 
 A kiosk robot that photographs guests, run live at the opening ceremony of an SNU robotics institute (August 2026). A Rainbow Robotics RB-Y1 holds a phone in its right gripper and sweeps it through a set of taught camera poses, shooting 30 photos per guest.
 
-Demo video: https://youtu.be/OhhxrzGfgDo
+## Demo
+
+[![Demo video](https://img.youtube.com/vi/OhhxrzGfgDo/hqdefault.jpg)](https://youtu.be/OhhxrzGfgDo)
+
+## Sample photos
+
+Frames the robot shot during one sweep at the event:
+
+<p>
+  <img src="docs/images/sample_1603.jpg" width="15%" alt="Front view">
+  <img src="docs/images/sample_1610.jpg" width="15%" alt="Slightly lower angle">
+  <img src="docs/images/sample_1620.jpg" width="15%" alt="Wider view of the hall">
+  <img src="docs/images/sample_1630.jpg" width="15%" alt="Low-angle close-up">
+  <img src="docs/images/sample_1648.jpg" width="15%" alt="Tilted upward angle">
+  <img src="docs/images/sample_1660.jpg" width="15%" alt="Full-body shot">
+</p>
 
 ## Based on GeekSeek
 
-This project is adapted from **GeekSeek**, built by team GeekSeek (SNU; 김민재, 박상원, 강채은) for the 1st Robot Hackathon hosted by Roboticus (Aug 5–8, 2026, KAIST).
+This project is adapted from **GeekSeek**, built by team GeekSeek from MeRo at SNU (김민재, 박상원, 강채은) for the 1st Robot Hackathon hosted by Roboticus (Aug 5–8, 2026, KAIST).
 
 - Original repository: https://github.com/robotic-us/1st-robot-hackathon_geekseek
 - Original robot: Phorce arm, driven by motion slots pre-loaded on its controller
